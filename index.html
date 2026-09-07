@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Portfolio HUD</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root{--void:#05080d;--panel:#0b1119;--line:#16222f;--cyan:#2ee6ff;--amber:#ffb340;--green:#3dff8a;--red:#ff4d5e;--text:#d7e3ee;--dim:#6f8397}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--void);color:var(--text);font-family:"JetBrains Mono",monospace;font-size:13px;
+    background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);background-size:48px 48px}
+  header{display:flex;justify-content:space-between;align-items:center;padding:18px 28px 10px;border-bottom:1px solid var(--line);flex-wrap:wrap;gap:10px}
+  h1{font-family:Orbitron,sans-serif;font-weight:700;font-size:18px;letter-spacing:.18em;color:var(--cyan);margin:0}
+  header small{color:var(--dim);display:block;margin-top:4px}
+  main{display:grid;grid-template-columns:2fr 1fr;gap:18px;padding:18px 28px;max-width:1500px;margin:0 auto}
+  .panel{background:rgba(11,17,25,.94);border:1px solid var(--line);padding:16px 18px;position:relative}
+  .panel::before{content:"";position:absolute;top:-1px;right:-1px;width:18px;height:18px;border-top:2px solid var(--cyan);border-right:2px solid var(--cyan)}
+  .panel h2{font-family:Orbitron,sans-serif;font-weight:500;font-size:12px;letter-spacing:.14em;color:var(--dim);margin:0 0 14px;display:flex;justify-content:space-between;align-items:center}
+  .kpis{grid-column:1/-1;display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
+  .kpi .v{font-family:Orbitron,sans-serif;font-size:26px;font-weight:700;color:var(--cyan);direction:ltr;text-align:right}
+  .kpi .l{color:var(--dim);margin-top:4px}
+  .pos{color:var(--green)}.neg{color:var(--red)}
+  table{width:100%;border-collapse:collapse}
+  th{color:var(--dim);font-weight:400;text-align:right;padding:6px 8px;border-bottom:1px solid var(--line)}
+  td{padding:7px 8px;border-bottom:1px solid rgba(22,34,47,.6);white-space:nowrap}
+  td.num{direction:ltr;text-align:right;font-variant-numeric:tabular-nums}
+  td.tk{font-family:Orbitron,sans-serif;font-weight:500;color:var(--cyan)}
+  tr:hover td{background:rgba(46,230,255,.04)}
+  .wbar{height:4px;background:var(--line);margin-top:4px}.wbar i{display:block;height:100%;background:var(--amber)}
+  .theme{display:grid;grid-template-columns:1fr auto;gap:4px 12px;align-items:center;margin-bottom:10px}
+  .theme .bar{grid-column:1/-1;height:6px;background:var(--line)}.theme .bar i{display:block;height:100%;background:var(--cyan)}.theme .bar.hot i{background:var(--amber)}
+  .empty{color:var(--dim);border:1px dashed var(--line);padding:18px;text-align:center;line-height:1.7}
+  .stack{display:flex;flex-direction:column;gap:18px}
+  .warn{color:var(--amber)}
+  .full{grid-column:1/-1}
+  button,input,select{font:inherit;background:transparent;color:var(--text);border:1px solid var(--line);padding:5px 9px}
+  input:focus,select:focus{outline:none;border-color:var(--cyan)}
+  button{cursor:pointer;color:var(--cyan);border-color:var(--cyan);letter-spacing:.06em}
+  button:hover{background:rgba(46,230,255,.1)}
+  button.x{color:var(--red);border-color:transparent;padding:2px 6px}button.x:hover{border-color:var(--red);background:rgba(255,77,94,.1)}
+  button.ghost{color:var(--dim);border-color:var(--line)}
+  .toolbar{display:flex;gap:8px;flex-wrap:wrap}
+  form{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:0 0 14px;padding:12px;border:1px dashed var(--line)}
+  form input{width:110px}form input.tk{text-transform:uppercase;width:90px}
+  .hidden{display:none}
+  .wgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:8px;max-height:520px;overflow:auto}
+  .wcell{display:grid;grid-template-columns:auto 1fr 1fr auto;gap:6px;align-items:center;border:1px solid var(--line);padding:6px 8px}
+  .wcell b{font-family:Orbitron,sans-serif;font-weight:500;color:var(--cyan);font-size:12px;min-width:48px}
+  .wcell input{width:100%;padding:3px 6px;direction:ltr;text-align:right;font-size:12px}
+  .wcell input.set{border-color:var(--amber);color:var(--amber)}
+  .wcell.held{border-color:rgba(61,255,138,.4)}
+  .note{color:var(--dim);margin:6px 0 0}
+  .modal{position:fixed;inset:0;background:rgba(5,8,13,.85);display:none;align-items:center;justify-content:center;z-index:9}
+  .modal.open{display:flex}.modal .box{width:min(1100px,94vw);height:min(640px,86vh);background:var(--panel);border:1px solid var(--cyan);padding:10px;display:flex;flex-direction:column}
+  .modal .box h3{font-family:Orbitron,sans-serif;color:var(--cyan);margin:0 0 8px;display:flex;justify-content:space-between;font-size:14px}
+  #tv{flex:1}
+  .live{color:var(--green)}.stale{color:var(--amber)}
+  .wcell{grid-template-columns:auto auto 1fr 1fr auto}.wcell small{direction:ltr;color:var(--dim);font-size:11px;white-space:nowrap}
+  .tk{cursor:pointer}.tk:hover{text-decoration:underline}
+  @media(max-width:900px){main{grid-template-columns:1fr}.kpis{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+<header>
+  <div><h1>PORTFOLIO HUD</h1><small id="stamp"></small></div>
+  <div class="toolbar">
+    <button onclick="refreshQuotes()">רענן שערים</button>
+    <button class="ghost" onclick="setAPI()">חיבור לשרת</button>
+    <button onclick="exportJSON()">שמור portfolio.json</button>
+    <label><button class="ghost" onclick="this.nextElementSibling.click()">טען JSON</button><input type="file" accept=".json" class="hidden" onchange="importJSON(this)"></label>
+    <button class="ghost" onclick="if(confirm('לאפס לנתוני ההתחלה?')){localStorage.removeItem(KEY);location.reload()}">איפוס</button>
+  </div>
+</header>
+<main>
+  <section class="kpis">
+    <div class="panel kpi"><div class="v" id="k-total"></div><div class="l">שווי מניות (₪)</div></div>
+    <div class="panel kpi"><div class="v" id="k-pl"></div><div class="l">רווח/הפסד מצטבר (₪)</div></div>
+    <div class="panel kpi"><div class="v" id="k-plpct"></div><div class="l">תשואה על העלות</div></div>
+    <div class="panel kpi"><div class="v" id="k-cash"></div><div class="l">מזומן נטו ($)</div></div>
+  </section>
+
+  <section class="panel">
+    <h2>HOLDINGS <button onclick="document.getElementById('addH').classList.toggle('hidden')">+ הוסף מניה</button></h2>
+    <form id="addH" class="hidden" onsubmit="addHolding(event)">
+      <input class="tk" name="ticker" placeholder="טיקר" required>
+      <input name="qty" type="number" step="any" placeholder="כמות" required>
+      <input name="avg" type="number" step="any" placeholder="ממוצע $" required>
+      <input name="price" type="number" step="any" placeholder="מחיר אחרון $" required>
+      <select name="theme" id="themeSel"></select>
+      <button type="submit">הוסף</button>
+    </form>
+    <table>
+      <thead><tr><th>טיקר</th><th>כמות</th><th>ממוצע $</th><th>אחרון $</th><th>היום</th><th>שווי ₪</th><th>רווח/הפסד ₪</th><th>%</th><th>משקל</th><th></th></tr></thead>
+      <tbody id="rows"></tbody>
+    </table>
+    <p class="note">מניה שנמכרה — לחץ × ליד השורה. עדכון כמות/ממוצע: הסר והוסף מחדש.</p>
+  </section>
+
+  <aside class="stack">
+    <section class="panel"><h2>EXPOSURE</h2><div id="themes"></div><p class="warn" id="themeWarn"></p></section>
+    <section class="panel"><h2>ALERTS</h2><div class="empty">אין התראות עדיין.<br>הסוכן החי (שלב 2) יכתוב לכאן ול-WhatsApp.</div></section>
+  </aside>
+
+  <section class="panel full">
+    <h2><span>WATCHLIST <span id="wcount" style="color:var(--dim)"></span></span>
+      <span class="toolbar"><input id="wfilter" placeholder="סנן" oninput="renderWatch()" style="width:110px">
+      <input id="wnew" class="tk" placeholder="טיקר" style="width:90px;text-transform:uppercase" onkeydown="if(event.key==='Enter')addWatch()">
+      <button onclick="addWatch()">+ הוסף</button></span></h2>
+    <div class="wgrid" id="watch"></div>
+    <p class="note">בכל כרטיס: <span class="warn">מכירה מעל</span> | <span class="warn">קנייה מתחת</span> — הזן שער ולחץ Enter או צא מהשדה. מסגרת ירוקה = מניה שגם בתיק. ערכים נשמרים בדפדפן; "שמור portfolio.json" מוריד את הקובץ שהסוכנים קוראים.</p>
+  </section>
+</main>
+
+<div class="modal" id="modal" onclick="if(event.target===this)closeChart()">
+  <div class="box"><h3><span id="mt"></span><button class="x" onclick="closeChart()">×</button></h3><div id="tv"></div></div>
+</div>
+<script src="https://s3.tradingview.com/tv.js"></script>
+<script>
+const KEY="portfolio-hud-v1";
+const SEED={"meta": {"owner": "Tal", "base_currency": "ILS", "snapshot_date": "2026-09-07", "usd_ils": 3.005, "note": "avg_cost_ils comes from the broker (historical FX); avg_cost_usd is the USD average. Positions of 1 share (SBET, ETHU) intentionally excluded."}, "cash": {"usd": 4531.67, "usd_liability": -4499.59}, "themes": {"bigtech_ai": "ביג-טק / תשתיות AI", "bitcoin": "ביטקוין / כורים", "nuclear": "גרעין", "quantum": "קוונטום", "robotics": "רובוטיקה", "minerals": "מינרלים קריטיים", "batteries": "סוללות", "biotech": "ביוטק"}, "holdings": [{"ticker": "META", "name": "Meta Platforms", "qty": 16.25, "avg_cost_usd": 615.59, "avg_cost_ils": 1815.24, "last_price": 616.77, "theme": "bigtech_ai", "thesis": ""}, {"ticker": "SMR", "name": "NuScale Power", "qty": 940.73, "avg_cost_usd": 10.64, "avg_cost_ils": 32.09, "last_price": 9.7, "theme": "nuclear", "thesis": ""}, {"ticker": "IBM", "name": "IBM", "qty": 30.73, "avg_cost_usd": 325.6, "avg_cost_ils": 919.14, "last_price": 234.89, "theme": "bigtech_ai", "thesis": ""}, {"ticker": "CLSK", "name": "CleanSpark", "qty": 496, "avg_cost_usd": 12.26, "avg_cost_ils": 36.58, "last_price": 12.69, "theme": "bitcoin", "thesis": ""}, {"ticker": "MSTR", "name": "Strategy (MicroStrategy)", "qty": 43.72, "avg_cost_usd": 185.15, "avg_cost_ils": 557.56, "last_price": 142.8, "theme": "bitcoin", "thesis": ""}, {"ticker": "INTC", "name": "Intel", "qty": 56.36, "avg_cost_usd": 88.83, "avg_cost_ils": 264.86, "last_price": 95.8, "theme": "bigtech_ai", "thesis": ""}, {"ticker": "RGTI", "name": "Rigetti Computing", "qty": 326.8, "avg_cost_usd": 18.05, "avg_cost_ils": 54.18, "last_price": 15.2, "theme": "quantum", "thesis": ""}, {"ticker": "AAOI", "name": "Applied Optoelectronics", "qty": 43.83, "avg_cost_usd": 102.83, "avg_cost_ils": 308.49, "last_price": 105.53, "theme": "bigtech_ai", "thesis": ""}, {"ticker": "IREN", "name": "IREN", "qty": 88, "avg_cost_usd": 34.01, "avg_cost_ils": 103.73, "last_price": 44.68, "theme": "bitcoin", "thesis": ""}, {"ticker": "ORCL", "name": "Oracle", "qty": 20.6, "avg_cost_usd": 145.96, "avg_cost_ils": 434.75, "last_price": 158.78, "theme": "bigtech_ai", "thesis": ""}, {"ticker": "RR", "name": "Richtech Robotics", "qty": 1736, "avg_cost_usd": 1.45, "avg_cost_ils": 4.4, "last_price": 1.75, "theme": "robotics", "thesis": ""}, {"ticker": "APLD", "name": "Applied Digital", "qty": 111.6, "avg_cost_usd": 26.95, "avg_cost_ils": 80.48, "last_price": 26.37, "theme": "bitcoin", "thesis": ""}, {"ticker": "CRML", "name": "Critical Metals", "qty": 306, "avg_cost_usd": 12.74, "avg_cost_ils": 37.68, "last_price": 7.28, "theme": "minerals", "thesis": ""}, {"ticker": "TNYA", "name": "Tenaya Therapeutics", "qty": 2584, "avg_cost_usd": 1.57, "avg_cost_ils": 4.92, "last_price": 0.68, "theme": "biotech", "thesis": ""}, {"ticker": "SES", "name": "SES AI", "qty": 985, "avg_cost_usd": 2.04, "avg_cost_ils": 6.77, "last_price": 0.5, "theme": "batteries", "thesis": ""}], "watchlist": [{"ticker": "SOFI", "sell_above": null, "buy_below": null, "note": ""}, {"ticker": "CELH", "sell_above": null, "buy_below": null, "note": ""}, {"ticker": "TOST", "sell_above": null, "buy_below": null, "note": ""}, {"ticker": "SEDG", "sell_above": null, "buy_below": null, "note": ""}, {"ticker": "Z", "sell_above": null, "buy_below": null, "note": ""}, {"ticker": "NKE", "sell_above": null, "buy_below": null, "note": ""}, {"ticker": "TSM", "sell_above": null, "buy_below": null, "note": ""}, {"ticker": "QQQ", "sell_above": null, "buy_below": null, "note": ""}, {"ticker": "LLY", "sell_above": null, "buy_below": null, "note": ""}, {"ticker": "ASML", "sell_above": null, "buy_below": null, "note": ""}, {"ticker": "MDB", "sell_above": null, "buy_below": null, "note": ""}, {"ticker": "AVGO", "sell_above": null, "buy_below": null, "note": ""}, {"ticker": "NVDA", "sell_above": null, "buy_below": null, "note": ""}, {"ticker": "MRVL", "sell_above": null, "buy_below": null, "note": ""}, {"ticker": "PGR", "sell_above": null, "buy_below": null, "note": ""}, {"ticker": "DASH", "sell_above": null, "buy_below": null, "note": ""}, {"ticker": "IBIT", "sell_above": null, "buy_below": null, "note": ""}, {"ticker": "TEM", "sell_above": null, "buy_below": null, "note": ""}, {"ticker": "PLTR", "sell_above": null, "buy_below": null, "note": ""}, {"ticker": "NBIS", "sell_above": null, "buy_below": null, "note": ""}, {"ticker": "CRCL", "sell_above": null, "buy_below": null, "note": ""}, {"ticker": "HIMS", "sell_above": null, "buy_below": null, "note": ""}, {"ticker": "FLY", "sell_above": null, "buy_below": null, "note": ""}, {"ticker": "PWR", "sell_above": null, "buy_below": null, "note": ""}, {"ticker": "DLR", "sell_above": null, "buy_below": null, "note": ""}, {"ticker": "SMCI", "sell_above": null, "buy_below": null, "note": ""}, {"ticker": "QMCO", "sell_above": null, "buy_below": null, "note": ""}, {"ticker": "ALAB", "sell_above": null, "buy_below": null, "note": ""}, {"ticker": "CRDO", "sell_above": null, "buy_below": null, "note": ""}, {"ticker": "ZS", "sell_above": null, "buy_below": null, "note": ""}, {"ticker": "QS", "sell_above": null, "buy_below": null, "note": ""}, {"ticker": "ORCL", "sell_above": null, "buy_below": null, "note": ""}, {"ticker": "NOVT", "sell_above": null, "buy_below": null, "note": ""}, {"ticker": "SYNA", "sell_above": null, "buy_below": null, "note": ""}, {"ticker": "AEHR", "sell_above": null, "buy_below": null, "note": ""}, {"ticker": "ROOT", "sell_above": null, "buy_below": null, "note": ""}, {"ticker": "PENG", "sell_above": null, "buy_below": null, "note": ""}, {"ticker": "RCAT", "sell_above": null, "buy_below": null, "note": ""}, {"ticker": "ONDS", "sell_above": null, "buy_below": null, "note": ""}, {"ticker": "JOBY", "sell_above": null, "buy_below": null, "note": ""}, {"ticker": "ASPI", "sell_above": null, "buy_below": null, "note": ""}, {"ticker": "NB", "sell_above": null, "buy_below": null, "note": ""}, {"ticker": "PLUG", "sell_above": null, "buy_below": null, "note": ""}, {"ticker": "SERV", "sell_above": null, "buy_below": null, "note": ""}, {"ticker": "SYM", "sell_above": null, "buy_below": null, "note": ""}, {"ticker": "ARBE", "sell_above": null, "buy_below": null, "note": ""}, {"ticker": "MSFT", "sell_above": null, "buy_below": null, "note": ""}, {"ticker": "TSLA", "sell_above": null, "buy_below": null, "note": ""}, {"ticker": "SNOW", "sell_above": null, "buy_below": null, "note": ""}, {"ticker": "AMZN", "sell_above": null, "buy_below": null, "note": ""}, {"ticker": "TTWO", "sell_above": null, "buy_below": null, "note": ""}, {"ticker": "CRWD", "sell_above": null, "buy_below": null, "note": ""}, {"ticker": "COIN", "sell_above": null, "buy_below": null, "note": ""}, {"ticker": "QCOM", "sell_above": null, "buy_below": null, "note": ""}, {"ticker": "BABA", "sell_above": null, "buy_below": null, "note": ""}, {"ticker": "NICE", "sell_above": null, "buy_below": null, "note": ""}, {"ticker": "RIOT", "sell_above": null, "buy_below": null, "note": ""}, {"ticker": "NIO", "sell_above": null, "buy_below": null, "note": ""}, {"ticker": "HUT", "sell_above": null, "buy_below": null, "note": ""}, {"ticker": "SOLT", "sell_above": null, "buy_below": null, "note": ""}, {"ticker": "BITI", "sell_above": null, "buy_below": null, "note": ""}, {"ticker": "CORZ", "sell_above": null, "buy_below": null, "note": ""}, {"ticker": "CIFR", "sell_above": null, "buy_below": null, "note": ""}, {"ticker": "WULF", "sell_above": null, "buy_below": null, "note": ""}, {"ticker": "BTDR", "sell_above": null, "buy_below": null, "note": ""}, {"ticker": "MARA", "sell_above": null, "buy_below": null, "note": ""}, {"ticker": "DGXX", "sell_above": null, "buy_below": null, "note": ""}, {"ticker": "BTQ", "sell_above": null, "buy_below": null, "note": ""}, {"ticker": "BTBT", "sell_above": null, "buy_below": null, "note": ""}, {"ticker": "BITF", "sell_above": null, "buy_below": null, "note": ""}, {"ticker": "SOXL", "sell_above": null, "buy_below": null, "note": ""}, {"ticker": "JPM", "sell_above": null, "buy_below": null, "note": ""}, {"ticker": "BMNR", "sell_above": null, "buy_below": null, "note": ""}, {"ticker": "APP", "sell_above": null, "buy_below": null, "note": ""}, {"ticker": "DELL", "sell_above": null, "buy_below": null, "note": ""}, {"ticker": "RDDT", "sell_above": null, "buy_below": null, "note": ""}, {"ticker": "SHOP", "sell_above": null, "buy_below": null, "note": ""}, {"ticker": "LMND", "sell_above": null, "buy_below": null, "note": ""}, {"ticker": "FIG", "sell_above": null, "buy_below": null, "note": ""}, {"ticker": "OPEN", "sell_above": null, "buy_below": null, "note": ""}, {"ticker": "BBAI", "sell_above": null, "buy_below": null, "note": ""}, {"ticker": "MP", "sell_above": null, "buy_below": null, "note": ""}, {"ticker": "CROX", "sell_above": null, "buy_below": null, "note": ""}, {"ticker": "RKLB", "sell_above": null, "buy_below": null, "note": ""}, {"ticker": "ASTS", "sell_above": null, "buy_below": null, "note": ""}, {"ticker": "IONQ", "sell_above": null, "buy_below": null, "note": ""}, {"ticker": "BULL", "sell_above": null, "buy_below": null, "note": ""}, {"ticker": "QUBT", "sell_above": null, "buy_below": null, "note": ""}, {"ticker": "HOOD", "sell_above": null, "buy_below": null, "note": ""}, {"ticker": "XPEV", "sell_above": null, "buy_below": null, "note": ""}, {"ticker": "DDOG", "sell_above": null, "buy_below": null, "note": ""}, {"ticker": "FTAI", "sell_above": null, "buy_below": null, "note": ""}, {"ticker": "AFRM", "sell_above": null, "buy_below": null, "note": ""}, {"ticker": "SOUN", "sell_above": null, "buy_below": null, "note": ""}, {"ticker": "ACHR", "sell_above": null, "buy_below": null, "note": ""}, {"ticker": "OKLO", "sell_above": null, "buy_below": null, "note": ""}, {"ticker": "NRG", "sell_above": null, "buy_below": null, "note": ""}, {"ticker": "NNE", "sell_above": null, "buy_below": null, "note": ""}, {"ticker": "MU", "sell_above": null, "buy_below": null, "note": ""}, {"ticker": "XRPI", "sell_above": null, "buy_below": null, "note": ""}, {"ticker": "SOLZ", "sell_above": null, "buy_below": null, "note": ""}, {"ticker": "BITX", "sell_above": null, "buy_below": null, "note": ""}, {"ticker": "BMNU", "sell_above": null, "buy_below": null, "note": ""}, {"ticker": "XRPT", "sell_above": null, "buy_below": null, "note": ""}, {"ticker": "ASST", "sell_above": null, "buy_below": null, "note": ""}, {"ticker": "PATH", "sell_above": null, "buy_below": null, "note": ""}, {"ticker": "MRNA", "sell_above": null, "buy_below": null, "note": ""}]};
+let S=JSON.parse(localStorage.getItem(KEY)||"null")||structuredClone(SEED);
+let Q={};                                   // live quotes from backend: ticker -> {c,dp,pc}
+const API=(localStorage.getItem("hud-api")||"").replace(/\/$/,"");
+function setAPI(){const u=prompt("כתובת השרת ב-Railway (ריק = עבודה מקומית בלבד):",API);if(u!==null){localStorage.setItem("hud-api",u.trim());location.reload()}}
+const save=()=>{localStorage.setItem(KEY,JSON.stringify(S));
+  if(API)fetch(API+"/portfolio",{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify(S)}).catch(()=>{})};
+async function loadRemote(){ if(!API)return; try{
+  const p=await (await fetch(API+"/portfolio")).json(); if(p.holdings){S=p;localStorage.setItem(KEY,JSON.stringify(S))}
+  Q=await (await fetch(API+"/quotes")).json();
+  S.holdings.forEach(h=>{if(Q[h.ticker])h.last_price=Q[h.ticker].c});
+}catch(e){console.warn("backend offline",e)} renderAll(); }
+async function refreshQuotes(){ if(!API){alert("אין חיבור לשרת — לחץ 'חיבור לשרת'");return} await fetch(API+"/refresh",{method:"POST"}).catch(()=>{}); loadRemote(); }
+function openChart(t){ document.getElementById("modal").classList.add("open"); document.getElementById("mt").textContent=t; document.getElementById("tv").innerHTML="";
+  new TradingView.widget({container_id:"tv",symbol:t,interval:"D",range:"1M",timezone:"Asia/Jerusalem",theme:"dark",style:"1",locale:"en",
+    withdateranges:true,hide_side_toolbar:true,allow_symbol_change:false,autosize:true,backgroundColor:"#0b1119",gridColor:"#16222f"}); }
+function closeChart(){ document.getElementById("modal").classList.remove("open"); }
+const dayCell=t=>{const q=Q[t];return q?`<td class="num ${q.dp<0?"neg":"pos"}">${q.dp.toFixed(1)}%</td>`:`<td class="num" style="color:var(--dim)">—</td>`};
+const fx=()=>S.meta.usd_ils, f0=n=>n.toLocaleString("en-US",{maximumFractionDigits:0}), f2=n=>n.toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2});
+const held=t=>S.holdings.some(h=>h.ticker===t);
+
+function renderHoldings(){
+  const rows=S.holdings.map(h=>{const value=h.qty*h.last_price*fx(), cost=h.qty*(h.avg_cost_ils||h.avg_cost_usd*fx()); return {...h,value,cost,pl:value-cost,plp:(value-cost)/cost*100}});
+  const total=rows.reduce((s,r)=>s+r.value,0)||1, cost=rows.reduce((s,r)=>s+r.cost,0)||1, pl=total-cost, cash=S.cash.usd+S.cash.usd_liability;
+  rows.forEach(r=>r.w=r.value/total*100); rows.sort((a,b)=>b.w-a.w);
+  document.getElementById("stamp").innerHTML=API?`USD/ILS ${fx()} · <span class="${S.meta.last_quote_update?"live":"stale"}">שערים: ${S.meta.last_quote_update?new Date(S.meta.last_quote_update).toLocaleString("he-IL"):"עדיין לא נמשכו"}</span>`:`snapshot ${S.meta.snapshot_date} · USD/ILS ${fx()} · <span class="stale">ללא שרת — שערים סטטיים</span>`;
+  document.getElementById("k-total").textContent=f0(total);
+  const plEl=document.getElementById("k-pl"); plEl.textContent=(pl<0?"−":"+")+f0(Math.abs(pl)); plEl.className="v "+(pl<0?"neg":"pos");
+  const ppEl=document.getElementById("k-plpct"); ppEl.textContent=(pl/cost*100).toFixed(1)+"%"; ppEl.className="v "+(pl<0?"neg":"pos");
+  document.getElementById("k-cash").textContent=f0(cash);
+  document.getElementById("rows").innerHTML=rows.map(r=>`<tr>
+    <td class="tk" onclick="openChart('${r.ticker}')">${r.ticker}</td><td class="num">${r.qty}</td><td class="num">${f2(r.avg_cost_usd)}</td><td class="num">${f2(r.last_price)}</td>
+    ${dayCell(r.ticker)}<td class="num">${f0(r.value)}</td><td class="num ${r.pl<0?"neg":"pos"}">${r.pl<0?"−":"+"}${f0(Math.abs(r.pl))}</td>
+    <td class="num ${r.pl<0?"neg":"pos"}">${r.plp.toFixed(1)}%</td>
+    <td class="num">${r.w.toFixed(1)}%<div class="wbar"><i style="width:${Math.min(r.w*4,100)}%"></i></div></td>
+    <td><button class="x" title="הסר (נמכרה)" onclick="removeHolding('${r.ticker}')">×</button></td></tr>`).join("");
+  const byTheme={}; rows.forEach(r=>byTheme[r.theme]=(byTheme[r.theme]||0)+r.w);
+  const themes=Object.entries(byTheme).sort((a,b)=>b[1]-a[1]);
+  document.getElementById("themes").innerHTML=themes.map(([k,v])=>`<div class="theme"><span>${S.themes[k]||k}</span><span class="num">${v.toFixed(1)}%</span><div class="bar ${v>=20?"hot":""}"><i style="width:${v}%"></i></div></div>`).join("");
+  const hot=themes.filter(([,v])=>v>=20).map(([k])=>S.themes[k]||k);
+  document.getElementById("themeWarn").textContent=hot.length?`ריכוז מעל 20%: ${hot.join(", ")}`:"";
+  document.getElementById("themeSel").innerHTML=Object.entries(S.themes).map(([k,v])=>`<option value="${k}">${v}</option>`).join("");
+}
+function addHolding(e){
+  e.preventDefault(); const f=new FormData(e.target); const t=f.get("ticker").trim().toUpperCase();
+  if(held(t)){alert(t+" כבר בתיק — הסר קודם");return}
+  S.holdings.push({ticker:t,name:t,qty:+f.get("qty"),avg_cost_usd:+f.get("avg"),avg_cost_ils:+f.get("avg")*fx(),last_price:+f.get("price"),theme:f.get("theme"),thesis:""});
+  e.target.reset(); e.target.classList.add("hidden"); save(); renderAll();
+}
+function removeHolding(t){ if(!confirm(`להסיר את ${t} מהתיק?`))return; S.holdings=S.holdings.filter(h=>h.ticker!==t); save(); renderAll(); }
+
+function renderWatch(){
+  const q=(document.getElementById("wfilter").value||"").toUpperCase();
+  const list=S.watchlist.filter(w=>w.ticker.includes(q));
+  document.getElementById("wcount").textContent=`(${S.watchlist.length})`;
+  document.getElementById("watch").innerHTML=list.length?list.map(w=>`<div class="wcell ${held(w.ticker)?"held":""}">
+    <b class="tk" onclick="openChart('${w.ticker}')">${w.ticker}</b>
+    <small>${Q[w.ticker]?`$${Q[w.ticker].c.toFixed(2)} <span class="${Q[w.ticker].dp<0?"neg":"pos"}">${Q[w.ticker].dp.toFixed(1)}%</span>`:"—"}</small>
+    <input class="${w.sell_above?"set":""}" type="number" step="any" placeholder="מכירה" value="${w.sell_above??""}" onchange="setRule('${w.ticker}','sell_above',this.value)">
+    <input class="${w.buy_below?"set":""}" type="number" step="any" placeholder="קנייה" value="${w.buy_below??""}" onchange="setRule('${w.ticker}','buy_below',this.value)">
+    <button class="x" onclick="removeWatch('${w.ticker}')">×</button></div>`).join("")
+  :`<div class="empty" style="grid-column:1/-1">רשימת המעקב ריקה.</div>`;
+}
+function setRule(t,k,v){ const w=S.watchlist.find(x=>x.ticker===t); w[k]=v===""?null:+v; save(); renderWatch(); }
+function addWatch(){ const el=document.getElementById("wnew"); const t=el.value.trim().toUpperCase(); if(!t)return;
+  if(S.watchlist.some(w=>w.ticker===t)){alert(t+" כבר ברשימה");return}
+  S.watchlist.unshift({ticker:t,sell_above:null,buy_below:null,note:""}); el.value=""; save(); renderWatch(); }
+function removeWatch(t){ S.watchlist=S.watchlist.filter(w=>w.ticker!==t); save(); renderWatch(); }
+
+function exportJSON(){ const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([JSON.stringify(S,null,2)],{type:"application/json"})); a.download="portfolio.json"; a.click(); }
+function importJSON(inp){ const r=new FileReader(); r.onload=()=>{try{S=JSON.parse(r.result);save();renderAll();}catch(e){alert("קובץ JSON לא תקין")}}; r.readAsText(inp.files[0]); inp.value=""; }
+function renderAll(){ renderHoldings(); renderWatch(); }
+renderAll(); loadRemote(); if(API)setInterval(loadRemote,5*60*1000);
+</script>
+</body>
+</html>
