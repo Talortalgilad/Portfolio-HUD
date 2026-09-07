@@ -1,0 +1,819 @@
+{
+  "meta": {
+    "owner": "Tal",
+    "base_currency": "ILS",
+    "snapshot_date": "2026-09-07",
+    "usd_ils": 3.005,
+    "note": "avg_cost_ils comes from the broker (historical FX); avg_cost_usd is the USD average. Positions of 1 share (SBET, ETHU) intentionally excluded."
+  },
+  "cash": {
+    "usd": 4531.67,
+    "usd_liability": -4499.59
+  },
+  "themes": {
+    "bigtech_ai": "ביג-טק / תשתיות AI",
+    "bitcoin": "ביטקוין / כורים",
+    "nuclear": "גרעין",
+    "quantum": "קוונטום",
+    "robotics": "רובוטיקה",
+    "minerals": "מינרלים קריטיים",
+    "batteries": "סוללות",
+    "biotech": "ביוטק"
+  },
+  "holdings": [
+    {
+      "ticker": "META",
+      "name": "Meta Platforms",
+      "qty": 16.25,
+      "avg_cost_usd": 615.59,
+      "avg_cost_ils": 1815.24,
+      "last_price": 616.77,
+      "theme": "bigtech_ai",
+      "thesis": ""
+    },
+    {
+      "ticker": "SMR",
+      "name": "NuScale Power",
+      "qty": 940.73,
+      "avg_cost_usd": 10.64,
+      "avg_cost_ils": 32.09,
+      "last_price": 9.7,
+      "theme": "nuclear",
+      "thesis": ""
+    },
+    {
+      "ticker": "IBM",
+      "name": "IBM",
+      "qty": 30.73,
+      "avg_cost_usd": 325.6,
+      "avg_cost_ils": 919.14,
+      "last_price": 234.89,
+      "theme": "bigtech_ai",
+      "thesis": ""
+    },
+    {
+      "ticker": "CLSK",
+      "name": "CleanSpark",
+      "qty": 496,
+      "avg_cost_usd": 12.26,
+      "avg_cost_ils": 36.58,
+      "last_price": 12.69,
+      "theme": "bitcoin",
+      "thesis": ""
+    },
+    {
+      "ticker": "MSTR",
+      "name": "Strategy (MicroStrategy)",
+      "qty": 43.72,
+      "avg_cost_usd": 185.15,
+      "avg_cost_ils": 557.56,
+      "last_price": 142.8,
+      "theme": "bitcoin",
+      "thesis": ""
+    },
+    {
+      "ticker": "INTC",
+      "name": "Intel",
+      "qty": 56.36,
+      "avg_cost_usd": 88.83,
+      "avg_cost_ils": 264.86,
+      "last_price": 95.8,
+      "theme": "bigtech_ai",
+      "thesis": ""
+    },
+    {
+      "ticker": "RGTI",
+      "name": "Rigetti Computing",
+      "qty": 326.8,
+      "avg_cost_usd": 18.05,
+      "avg_cost_ils": 54.18,
+      "last_price": 15.2,
+      "theme": "quantum",
+      "thesis": ""
+    },
+    {
+      "ticker": "AAOI",
+      "name": "Applied Optoelectronics",
+      "qty": 43.83,
+      "avg_cost_usd": 102.83,
+      "avg_cost_ils": 308.49,
+      "last_price": 105.53,
+      "theme": "bigtech_ai",
+      "thesis": ""
+    },
+    {
+      "ticker": "IREN",
+      "name": "IREN",
+      "qty": 88,
+      "avg_cost_usd": 34.01,
+      "avg_cost_ils": 103.73,
+      "last_price": 44.68,
+      "theme": "bitcoin",
+      "thesis": ""
+    },
+    {
+      "ticker": "ORCL",
+      "name": "Oracle",
+      "qty": 20.6,
+      "avg_cost_usd": 145.96,
+      "avg_cost_ils": 434.75,
+      "last_price": 158.78,
+      "theme": "bigtech_ai",
+      "thesis": ""
+    },
+    {
+      "ticker": "RR",
+      "name": "Richtech Robotics",
+      "qty": 1736,
+      "avg_cost_usd": 1.45,
+      "avg_cost_ils": 4.4,
+      "last_price": 1.75,
+      "theme": "robotics",
+      "thesis": ""
+    },
+    {
+      "ticker": "APLD",
+      "name": "Applied Digital",
+      "qty": 111.6,
+      "avg_cost_usd": 26.95,
+      "avg_cost_ils": 80.48,
+      "last_price": 26.37,
+      "theme": "bitcoin",
+      "thesis": ""
+    },
+    {
+      "ticker": "CRML",
+      "name": "Critical Metals",
+      "qty": 306,
+      "avg_cost_usd": 12.74,
+      "avg_cost_ils": 37.68,
+      "last_price": 7.28,
+      "theme": "minerals",
+      "thesis": ""
+    },
+    {
+      "ticker": "TNYA",
+      "name": "Tenaya Therapeutics",
+      "qty": 2584,
+      "avg_cost_usd": 1.57,
+      "avg_cost_ils": 4.92,
+      "last_price": 0.68,
+      "theme": "biotech",
+      "thesis": ""
+    },
+    {
+      "ticker": "SES",
+      "name": "SES AI",
+      "qty": 985,
+      "avg_cost_usd": 2.04,
+      "avg_cost_ils": 6.77,
+      "last_price": 0.5,
+      "theme": "batteries",
+      "thesis": ""
+    }
+  ],
+  "watchlist": [
+    {
+      "ticker": "SOFI",
+      "sell_above": null,
+      "buy_below": null,
+      "note": ""
+    },
+    {
+      "ticker": "CELH",
+      "sell_above": null,
+      "buy_below": null,
+      "note": ""
+    },
+    {
+      "ticker": "TOST",
+      "sell_above": null,
+      "buy_below": null,
+      "note": ""
+    },
+    {
+      "ticker": "SEDG",
+      "sell_above": null,
+      "buy_below": null,
+      "note": ""
+    },
+    {
+      "ticker": "Z",
+      "sell_above": null,
+      "buy_below": null,
+      "note": ""
+    },
+    {
+      "ticker": "NKE",
+      "sell_above": null,
+      "buy_below": null,
+      "note": ""
+    },
+    {
+      "ticker": "TSM",
+      "sell_above": null,
+      "buy_below": null,
+      "note": ""
+    },
+    {
+      "ticker": "QQQ",
+      "sell_above": null,
+      "buy_below": null,
+      "note": ""
+    },
+    {
+      "ticker": "LLY",
+      "sell_above": null,
+      "buy_below": null,
+      "note": ""
+    },
+    {
+      "ticker": "ASML",
+      "sell_above": null,
+      "buy_below": null,
+      "note": ""
+    },
+    {
+      "ticker": "MDB",
+      "sell_above": null,
+      "buy_below": null,
+      "note": ""
+    },
+    {
+      "ticker": "AVGO",
+      "sell_above": null,
+      "buy_below": null,
+      "note": ""
+    },
+    {
+      "ticker": "NVDA",
+      "sell_above": null,
+      "buy_below": null,
+      "note": ""
+    },
+    {
+      "ticker": "MRVL",
+      "sell_above": null,
+      "buy_below": null,
+      "note": ""
+    },
+    {
+      "ticker": "PGR",
+      "sell_above": null,
+      "buy_below": null,
+      "note": ""
+    },
+    {
+      "ticker": "DASH",
+      "sell_above": null,
+      "buy_below": null,
+      "note": ""
+    },
+    {
+      "ticker": "IBIT",
+      "sell_above": null,
+      "buy_below": null,
+      "note": ""
+    },
+    {
+      "ticker": "TEM",
+      "sell_above": null,
+      "buy_below": null,
+      "note": ""
+    },
+    {
+      "ticker": "PLTR",
+      "sell_above": null,
+      "buy_below": null,
+      "note": ""
+    },
+    {
+      "ticker": "NBIS",
+      "sell_above": null,
+      "buy_below": null,
+      "note": ""
+    },
+    {
+      "ticker": "CRCL",
+      "sell_above": null,
+      "buy_below": null,
+      "note": ""
+    },
+    {
+      "ticker": "HIMS",
+      "sell_above": null,
+      "buy_below": null,
+      "note": ""
+    },
+    {
+      "ticker": "FLY",
+      "sell_above": null,
+      "buy_below": null,
+      "note": ""
+    },
+    {
+      "ticker": "PWR",
+      "sell_above": null,
+      "buy_below": null,
+      "note": ""
+    },
+    {
+      "ticker": "DLR",
+      "sell_above": null,
+      "buy_below": null,
+      "note": ""
+    },
+    {
+      "ticker": "SMCI",
+      "sell_above": null,
+      "buy_below": null,
+      "note": ""
+    },
+    {
+      "ticker": "QMCO",
+      "sell_above": null,
+      "buy_below": null,
+      "note": ""
+    },
+    {
+      "ticker": "ALAB",
+      "sell_above": null,
+      "buy_below": null,
+      "note": ""
+    },
+    {
+      "ticker": "CRDO",
+      "sell_above": null,
+      "buy_below": null,
+      "note": ""
+    },
+    {
+      "ticker": "ZS",
+      "sell_above": null,
+      "buy_below": null,
+      "note": ""
+    },
+    {
+      "ticker": "QS",
+      "sell_above": null,
+      "buy_below": null,
+      "note": ""
+    },
+    {
+      "ticker": "ORCL",
+      "sell_above": null,
+      "buy_below": null,
+      "note": ""
+    },
+    {
+      "ticker": "NOVT",
+      "sell_above": null,
+      "buy_below": null,
+      "note": ""
+    },
+    {
+      "ticker": "SYNA",
+      "sell_above": null,
+      "buy_below": null,
+      "note": ""
+    },
+    {
+      "ticker": "AEHR",
+      "sell_above": null,
+      "buy_below": null,
+      "note": ""
+    },
+    {
+      "ticker": "ROOT",
+      "sell_above": null,
+      "buy_below": null,
+      "note": ""
+    },
+    {
+      "ticker": "PENG",
+      "sell_above": null,
+      "buy_below": null,
+      "note": ""
+    },
+    {
+      "ticker": "RCAT",
+      "sell_above": null,
+      "buy_below": null,
+      "note": ""
+    },
+    {
+      "ticker": "ONDS",
+      "sell_above": null,
+      "buy_below": null,
+      "note": ""
+    },
+    {
+      "ticker": "JOBY",
+      "sell_above": null,
+      "buy_below": null,
+      "note": ""
+    },
+    {
+      "ticker": "ASPI",
+      "sell_above": null,
+      "buy_below": null,
+      "note": ""
+    },
+    {
+      "ticker": "NB",
+      "sell_above": null,
+      "buy_below": null,
+      "note": ""
+    },
+    {
+      "ticker": "PLUG",
+      "sell_above": null,
+      "buy_below": null,
+      "note": ""
+    },
+    {
+      "ticker": "SERV",
+      "sell_above": null,
+      "buy_below": null,
+      "note": ""
+    },
+    {
+      "ticker": "SYM",
+      "sell_above": null,
+      "buy_below": null,
+      "note": ""
+    },
+    {
+      "ticker": "ARBE",
+      "sell_above": null,
+      "buy_below": null,
+      "note": ""
+    },
+    {
+      "ticker": "MSFT",
+      "sell_above": null,
+      "buy_below": null,
+      "note": ""
+    },
+    {
+      "ticker": "TSLA",
+      "sell_above": null,
+      "buy_below": null,
+      "note": ""
+    },
+    {
+      "ticker": "SNOW",
+      "sell_above": null,
+      "buy_below": null,
+      "note": ""
+    },
+    {
+      "ticker": "AMZN",
+      "sell_above": null,
+      "buy_below": null,
+      "note": ""
+    },
+    {
+      "ticker": "TTWO",
+      "sell_above": null,
+      "buy_below": null,
+      "note": ""
+    },
+    {
+      "ticker": "CRWD",
+      "sell_above": null,
+      "buy_below": null,
+      "note": ""
+    },
+    {
+      "ticker": "COIN",
+      "sell_above": null,
+      "buy_below": null,
+      "note": ""
+    },
+    {
+      "ticker": "QCOM",
+      "sell_above": null,
+      "buy_below": null,
+      "note": ""
+    },
+    {
+      "ticker": "BABA",
+      "sell_above": null,
+      "buy_below": null,
+      "note": ""
+    },
+    {
+      "ticker": "NICE",
+      "sell_above": null,
+      "buy_below": null,
+      "note": ""
+    },
+    {
+      "ticker": "RIOT",
+      "sell_above": null,
+      "buy_below": null,
+      "note": ""
+    },
+    {
+      "ticker": "NIO",
+      "sell_above": null,
+      "buy_below": null,
+      "note": ""
+    },
+    {
+      "ticker": "HUT",
+      "sell_above": null,
+      "buy_below": null,
+      "note": ""
+    },
+    {
+      "ticker": "SOLT",
+      "sell_above": null,
+      "buy_below": null,
+      "note": ""
+    },
+    {
+      "ticker": "BITI",
+      "sell_above": null,
+      "buy_below": null,
+      "note": ""
+    },
+    {
+      "ticker": "CORZ",
+      "sell_above": null,
+      "buy_below": null,
+      "note": ""
+    },
+    {
+      "ticker": "CIFR",
+      "sell_above": null,
+      "buy_below": null,
+      "note": ""
+    },
+    {
+      "ticker": "WULF",
+      "sell_above": null,
+      "buy_below": null,
+      "note": ""
+    },
+    {
+      "ticker": "BTDR",
+      "sell_above": null,
+      "buy_below": null,
+      "note": ""
+    },
+    {
+      "ticker": "MARA",
+      "sell_above": null,
+      "buy_below": null,
+      "note": ""
+    },
+    {
+      "ticker": "DGXX",
+      "sell_above": null,
+      "buy_below": null,
+      "note": ""
+    },
+    {
+      "ticker": "BTQ",
+      "sell_above": null,
+      "buy_below": null,
+      "note": ""
+    },
+    {
+      "ticker": "BTBT",
+      "sell_above": null,
+      "buy_below": null,
+      "note": ""
+    },
+    {
+      "ticker": "BITF",
+      "sell_above": null,
+      "buy_below": null,
+      "note": ""
+    },
+    {
+      "ticker": "SOXL",
+      "sell_above": null,
+      "buy_below": null,
+      "note": ""
+    },
+    {
+      "ticker": "JPM",
+      "sell_above": null,
+      "buy_below": null,
+      "note": ""
+    },
+    {
+      "ticker": "BMNR",
+      "sell_above": null,
+      "buy_below": null,
+      "note": ""
+    },
+    {
+      "ticker": "APP",
+      "sell_above": null,
+      "buy_below": null,
+      "note": ""
+    },
+    {
+      "ticker": "DELL",
+      "sell_above": null,
+      "buy_below": null,
+      "note": ""
+    },
+    {
+      "ticker": "RDDT",
+      "sell_above": null,
+      "buy_below": null,
+      "note": ""
+    },
+    {
+      "ticker": "SHOP",
+      "sell_above": null,
+      "buy_below": null,
+      "note": ""
+    },
+    {
+      "ticker": "LMND",
+      "sell_above": null,
+      "buy_below": null,
+      "note": ""
+    },
+    {
+      "ticker": "FIG",
+      "sell_above": null,
+      "buy_below": null,
+      "note": ""
+    },
+    {
+      "ticker": "OPEN",
+      "sell_above": null,
+      "buy_below": null,
+      "note": ""
+    },
+    {
+      "ticker": "BBAI",
+      "sell_above": null,
+      "buy_below": null,
+      "note": ""
+    },
+    {
+      "ticker": "MP",
+      "sell_above": null,
+      "buy_below": null,
+      "note": ""
+    },
+    {
+      "ticker": "CROX",
+      "sell_above": null,
+      "buy_below": null,
+      "note": ""
+    },
+    {
+      "ticker": "RKLB",
+      "sell_above": null,
+      "buy_below": null,
+      "note": ""
+    },
+    {
+      "ticker": "ASTS",
+      "sell_above": null,
+      "buy_below": null,
+      "note": ""
+    },
+    {
+      "ticker": "IONQ",
+      "sell_above": null,
+      "buy_below": null,
+      "note": ""
+    },
+    {
+      "ticker": "BULL",
+      "sell_above": null,
+      "buy_below": null,
+      "note": ""
+    },
+    {
+      "ticker": "QUBT",
+      "sell_above": null,
+      "buy_below": null,
+      "note": ""
+    },
+    {
+      "ticker": "HOOD",
+      "sell_above": null,
+      "buy_below": null,
+      "note": ""
+    },
+    {
+      "ticker": "XPEV",
+      "sell_above": null,
+      "buy_below": null,
+      "note": ""
+    },
+    {
+      "ticker": "DDOG",
+      "sell_above": null,
+      "buy_below": null,
+      "note": ""
+    },
+    {
+      "ticker": "FTAI",
+      "sell_above": null,
+      "buy_below": null,
+      "note": ""
+    },
+    {
+      "ticker": "AFRM",
+      "sell_above": null,
+      "buy_below": null,
+      "note": ""
+    },
+    {
+      "ticker": "SOUN",
+      "sell_above": null,
+      "buy_below": null,
+      "note": ""
+    },
+    {
+      "ticker": "ACHR",
+      "sell_above": null,
+      "buy_below": null,
+      "note": ""
+    },
+    {
+      "ticker": "OKLO",
+      "sell_above": null,
+      "buy_below": null,
+      "note": ""
+    },
+    {
+      "ticker": "NRG",
+      "sell_above": null,
+      "buy_below": null,
+      "note": ""
+    },
+    {
+      "ticker": "NNE",
+      "sell_above": null,
+      "buy_below": null,
+      "note": ""
+    },
+    {
+      "ticker": "MU",
+      "sell_above": null,
+      "buy_below": null,
+      "note": ""
+    },
+    {
+      "ticker": "XRPI",
+      "sell_above": null,
+      "buy_below": null,
+      "note": ""
+    },
+    {
+      "ticker": "SOLZ",
+      "sell_above": null,
+      "buy_below": null,
+      "note": ""
+    },
+    {
+      "ticker": "BITX",
+      "sell_above": null,
+      "buy_below": null,
+      "note": ""
+    },
+    {
+      "ticker": "BMNU",
+      "sell_above": null,
+      "buy_below": null,
+      "note": ""
+    },
+    {
+      "ticker": "XRPT",
+      "sell_above": null,
+      "buy_below": null,
+      "note": ""
+    },
+    {
+      "ticker": "ASST",
+      "sell_above": null,
+      "buy_below": null,
+      "note": ""
+    },
+    {
+      "ticker": "PATH",
+      "sell_above": null,
+      "buy_below": null,
+      "note": ""
+    },
+    {
+      "ticker": "MRNA",
+      "sell_above": null,
+      "buy_below": null,
+      "note": ""
+    }
+  ]
+}
