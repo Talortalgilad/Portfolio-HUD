@@ -9,6 +9,7 @@ import os, json, time, threading, urllib.parse, datetime as dt
 from zoneinfo import ZoneInfo
 import requests
 from fastapi import FastAPI, HTTPException
+from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from apscheduler.schedulers.background import BackgroundScheduler
 
@@ -149,5 +150,12 @@ def test_wa(): whatsapp("✅ Portfolio HUD מחובר"); return {"ok": True}
 @app.post("/run-daily")
 def run_daily(): daily_summary(); return {"ok": True}
 
+@app.get("/health")
+def health(): return {"status": "up", "quotes": len(_quotes), "market_open": market_open()}
+
+INDEX = os.path.join(os.path.dirname(os.path.abspath(__file__)), "index.html")
+
 @app.get("/")
-def root(): return {"status": "up", "quotes": len(_quotes), "market_open": market_open()}
+def root():
+    if os.path.exists(INDEX): return FileResponse(INDEX)
+    return {"status": "up", "hint": "index.html missing next to main.py"}
