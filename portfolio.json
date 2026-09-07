@@ -29,7 +29,8 @@
       "avg_cost_ils": 1815.24,
       "last_price": 616.77,
       "theme": "bigtech_ai",
-      "thesis": ""
+      "thesis": null,
+      "user_thesis": "מניה טובה ובטוחה"
     },
     {
       "ticker": "SMR",
@@ -39,7 +40,8 @@
       "avg_cost_ils": 32.09,
       "last_price": 9.7,
       "theme": "nuclear",
-      "thesis": ""
+      "thesis": null,
+      "user_thesis": "קנייה טובה — הכורים הגרעיניים יחזרו למחירים של 50"
     },
     {
       "ticker": "IBM",
@@ -49,7 +51,8 @@
       "avg_cost_ils": 919.14,
       "last_price": 234.89,
       "theme": "bigtech_ai",
-      "thesis": ""
+      "thesis": null,
+      "user_thesis": "חשבתי שתעלה כמו אינטל; שוקל לצמצם פוזיציה"
     },
     {
       "ticker": "CLSK",
@@ -59,7 +62,8 @@
       "avg_cost_ils": 36.58,
       "last_price": 12.69,
       "theme": "bitcoin",
-      "thesis": ""
+      "thesis": null,
+      "user_thesis": "לטווח ארוך עד 2030 — סיום הסייקל של הביטקוין"
     },
     {
       "ticker": "MSTR",
@@ -69,7 +73,8 @@
       "avg_cost_ils": 557.56,
       "last_price": 142.8,
       "theme": "bitcoin",
-      "thesis": ""
+      "thesis": null,
+      "user_thesis": "לטווח ארוך עד 2030 — סיום הסייקל של הביטקוין"
     },
     {
       "ticker": "INTC",
@@ -79,7 +84,8 @@
       "avg_cost_ils": 264.86,
       "last_price": 95.8,
       "theme": "bigtech_ai",
-      "thesis": ""
+      "thesis": null,
+      "user_thesis": ""
     },
     {
       "ticker": "RGTI",
@@ -89,7 +95,8 @@
       "avg_cost_ils": 54.18,
       "last_price": 15.2,
       "theme": "quantum",
-      "thesis": ""
+      "thesis": null,
+      "user_thesis": ""
     },
     {
       "ticker": "AAOI",
@@ -99,7 +106,8 @@
       "avg_cost_ils": 308.49,
       "last_price": 105.53,
       "theme": "bigtech_ai",
-      "thesis": ""
+      "thesis": null,
+      "user_thesis": ""
     },
     {
       "ticker": "IREN",
@@ -109,7 +117,8 @@
       "avg_cost_ils": 103.73,
       "last_price": 44.68,
       "theme": "bitcoin",
-      "thesis": ""
+      "thesis": null,
+      "user_thesis": ""
     },
     {
       "ticker": "ORCL",
@@ -119,7 +128,8 @@
       "avg_cost_ils": 434.75,
       "last_price": 158.78,
       "theme": "bigtech_ai",
-      "thesis": ""
+      "thesis": null,
+      "user_thesis": ""
     },
     {
       "ticker": "RR",
@@ -129,7 +139,8 @@
       "avg_cost_ils": 4.4,
       "last_price": 1.75,
       "theme": "robotics",
-      "thesis": ""
+      "thesis": null,
+      "user_thesis": ""
     },
     {
       "ticker": "APLD",
@@ -139,7 +150,8 @@
       "avg_cost_ils": 80.48,
       "last_price": 26.37,
       "theme": "bitcoin",
-      "thesis": ""
+      "thesis": null,
+      "user_thesis": ""
     },
     {
       "ticker": "CRML",
@@ -149,7 +161,8 @@
       "avg_cost_ils": 37.68,
       "last_price": 7.28,
       "theme": "minerals",
-      "thesis": ""
+      "thesis": null,
+      "user_thesis": ""
     },
     {
       "ticker": "TNYA",
@@ -159,7 +172,8 @@
       "avg_cost_ils": 4.92,
       "last_price": 0.68,
       "theme": "biotech",
-      "thesis": ""
+      "thesis": null,
+      "user_thesis": ""
     },
     {
       "ticker": "SES",
@@ -169,7 +183,8 @@
       "avg_cost_ils": 6.77,
       "last_price": 0.5,
       "theme": "batteries",
-      "thesis": ""
+      "thesis": null,
+      "user_thesis": ""
     }
   ],
   "watchlist": [

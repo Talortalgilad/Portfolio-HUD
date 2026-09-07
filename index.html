@@ -52,7 +52,14 @@
   .wcell.held{border-color:rgba(61,255,138,.4)}
   .note{color:var(--dim);margin:6px 0 0}
   .modal{position:fixed;inset:0;background:rgba(5,8,13,.85);display:none;align-items:center;justify-content:center;z-index:9}
-  .modal.open{display:flex}.modal .box{width:min(1100px,94vw);height:min(640px,86vh);background:var(--panel);border:1px solid var(--cyan);padding:10px;display:flex;flex-direction:column}
+  .modal.open{display:flex}.modal .box{width:min(1400px,96vw);height:min(720px,90vh);background:var(--panel);border:1px solid var(--cyan);padding:10px;display:grid;grid-template-rows:auto 1fr;grid-template-columns:1fr 340px;gap:10px}
+  .modal .box h3{grid-column:1/-1}
+  .th{overflow:auto;border-right:1px solid var(--line);padding-right:12px;font-size:12px;line-height:1.55}
+  .th textarea{width:100%;height:56px;background:transparent;color:var(--text);border:1px solid var(--line);font:inherit;padding:6px;resize:vertical}
+  .th h4{font-family:Orbitron,sans-serif;font-size:11px;letter-spacing:.12em;color:var(--dim);margin:12px 0 4px}
+  .th .sc{display:grid;grid-template-columns:auto 1fr;gap:2px 8px}.th .sc b{direction:ltr}
+  .th .tag{display:inline-block;border:1px solid var(--amber);color:var(--amber);padding:1px 8px;font-family:Orbitron,sans-serif;font-size:10px;letter-spacing:.1em}
+  .th .tag.add{border-color:var(--green);color:var(--green)}.th .tag.trim,.th .tag.review{border-color:var(--red);color:var(--red)}
   .modal .box h3{font-family:Orbitron,sans-serif;color:var(--cyan);margin:0 0 8px;display:flex;justify-content:space-between;font-size:14px}
   #tv{flex:1}
   .live{color:var(--green)}.stale{color:var(--amber)}
@@ -113,7 +120,7 @@
 </main>
 
 <div class="modal" id="modal" onclick="if(event.target===this)closeChart()">
-  <div class="box"><h3><span id="mt"></span><button class="x" onclick="closeChart()">×</button></h3><div id="tv"></div></div>
+  <div class="box"><h3><span id="mt"></span><button class="x" onclick="closeChart()">×</button></h3><div id="tv"></div><div class="th" id="th"></div></div>
 </div>
 <script src="https://s3.tradingview.com/tv.js"></script>
 <script>
@@ -133,7 +140,26 @@ async function loadRemote(){ if(!API)return; try{
 async function refreshQuotes(){ if(!API){alert("אין חיבור לשרת — לחץ 'חיבור לשרת'");return} await fetch(API+"/refresh",{method:"POST"}).catch(()=>{}); loadRemote(); }
 function openChart(t){ document.getElementById("modal").classList.add("open"); document.getElementById("mt").textContent=t; document.getElementById("tv").innerHTML="";
   new TradingView.widget({container_id:"tv",symbol:t,interval:"D",range:"1M",timezone:"Asia/Jerusalem",theme:"dark",style:"1",locale:"en",
-    withdateranges:true,hide_side_toolbar:true,allow_symbol_change:false,autosize:true,backgroundColor:"#0b1119",gridColor:"#16222f"}); }
+    withdateranges:true,hide_side_toolbar:true,allow_symbol_change:false,autosize:true,backgroundColor:"#0b1119",gridColor:"#16222f"}); renderThesis(t); }
+function findItem(t){return S.holdings.find(h=>h.ticker===t)||S.watchlist.find(w=>w.ticker===t)}
+function renderThesis(t){
+  const it=findItem(t)||{}, th=it.thesis, V={hold:"החזק",trim:"צמצם",add:"הגדל",review:"בדוק מחדש"};
+  let html=`<h4>התזה שלי</h4><textarea placeholder="למה קניתי / למה אני עוקב" onblur="findItem('${t}').user_thesis=this.value;save()">${it.user_thesis||""}</textarea>
+    <div style="margin-top:8px"><button onclick="genThesis('${t}')">${th?"רענן תזה":"צור תזה"}</button> <span id="thmsg" style="color:var(--dim)"></span></div>`;
+  if(th&&typeof th==="object") html+=`
+    <h4>כרטיס תזה <span style="color:var(--dim)">(${th.generated}, $${th.price_at})</span> <span class="tag ${th.verdict}">${V[th.verdict]||th.verdict}</span></h4>
+    <p>${th.summary}</p><p>${th.thesis}</p>
+    <h4>תרחישים לשנה</h4><div class="sc"><b class="pos">$${th.scenarios?.bull?.price}</b><span>${th.scenarios?.bull?.trigger}</span><b>$${th.scenarios?.base?.price}</b><span>${th.scenarios?.base?.trigger}</span><b class="neg">$${th.scenarios?.bear?.price}</b><span>${th.scenarios?.bear?.trigger}</span></div>
+    <h4>יציאה</h4><div class="sc"><b class="pos">$${th.sell_target}</b><span>יעד מכירה</span><b class="neg">$${th.stop}</b><span>stop — התזה נשברה</span></div><p>${th.exit_strategy}</p>
+    <h4>קרוב</h4><p>דוח הבא: ${th.next_earnings}<br>${(th.events||[]).join("<br>")}</p>
+    <h4>הקול השפוי</h4><p>${th.risk_note}</p>${th.user_thesis_check?`<p class="warn">${th.user_thesis_check}</p>`:""}`;
+  else if(!API) html+=`<p style="color:var(--dim)">יצירת תזה דורשת חיבור לשרת.</p>`;
+  document.getElementById("th").innerHTML=html;
+}
+async function genThesis(t){ const m=document.getElementById("thmsg"); m.textContent="מחפש ומנתח… (כדקה)";
+  try{ const r=await fetch(API+"/thesis/"+t,{method:"POST"}); if(!r.ok) throw new Error(await r.text());
+    const th=await r.json(); findItem(t).thesis=th; localStorage.setItem(KEY,JSON.stringify(S)); renderThesis(t); }
+  catch(e){ m.textContent="שגיאה: "+e.message; } }
 function closeChart(){ document.getElementById("modal").classList.remove("open"); }
 const dayCell=t=>{const q=Q[t];return q?`<td class="num ${q.dp<0?"neg":"pos"}">${q.dp.toFixed(1)}%</td>`:`<td class="num" style="color:var(--dim)">—</td>`};
 const fx=()=>S.meta.usd_ils, f0=n=>n.toLocaleString("en-US",{maximumFractionDigits:0}), f2=n=>n.toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2});
@@ -149,7 +175,7 @@ function renderHoldings(){
   const ppEl=document.getElementById("k-plpct"); ppEl.textContent=(pl/cost*100).toFixed(1)+"%"; ppEl.className="v "+(pl<0?"neg":"pos");
   document.getElementById("k-cash").textContent=f0(cash);
   document.getElementById("rows").innerHTML=rows.map(r=>`<tr>
-    <td class="tk" onclick="openChart('${r.ticker}')">${r.ticker}</td><td class="num">${r.qty}</td><td class="num">${f2(r.avg_cost_usd)}</td><td class="num">${f2(r.last_price)}</td>
+    <td class="tk" onclick="openChart('${r.ticker}')">${r.ticker}${r.thesis&&r.thesis.verdict?` <span style="font-size:9px;color:${r.thesis.verdict==="add"?"var(--green)":r.thesis.verdict==="hold"?"var(--dim)":"var(--red)"}">●</span>`:""}</td><td class="num">${r.qty}</td><td class="num">${f2(r.avg_cost_usd)}</td><td class="num">${f2(r.last_price)}</td>
     ${dayCell(r.ticker)}<td class="num">${f0(r.value)}</td><td class="num ${r.pl<0?"neg":"pos"}">${r.pl<0?"−":"+"}${f0(Math.abs(r.pl))}</td>
     <td class="num ${r.pl<0?"neg":"pos"}">${r.plp.toFixed(1)}%</td>
     <td class="num">${r.w.toFixed(1)}%<div class="wbar"><i style="width:${Math.min(r.w*4,100)}%"></i></div></td>

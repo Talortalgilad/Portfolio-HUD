@@ -1,0 +1,35 @@
+# Portfolio HUD — backend (Railway)
+
+## פריסה — 10 דקות
+1. finnhub.io → הרשמה חינמית → העתק את ה-API key.
+2. CallMeBot: שלח בוואטסאפ למספר +34 644 34 87 21 את ההודעה `I allow callmebot to send me messages` → תקבל apikey.
+3. GitHub: צור ריפו חדש והעלה את תיקיית `backend` (main.py, index.html, requirements.txt, Procfile, portfolio.json).
+4. railway.app → New Project → Deploy from GitHub repo → בחר את הריפו.
+5. ב-Railway → Variables: הוסף FINNHUB_KEY, CALLMEBOT_PHONE (+9725...), CALLMEBOT_KEY, ANTHROPIC_API_KEY, DATA_PATH=/data/portfolio.json
+6. ב-Railway → Volumes: הוסף volume עם mount path `/data` (כדי ש-portfolio.json ישרוד deploys). העתק אליו את portfolio.json פעם אחת (או השאר DATA_PATH ריק בהתחלה — אז הקובץ מהריפו משמש).
+7. Settings → Networking → Generate Domain → קבל כתובת https://xxx.up.railway.app
+8. פתח את הכתובת בדפדפן — זה הדשבורד עצמו (index.html מוגש מהשרת ומתחבר אליו אוטומטית). לא צריך "חיבור לשרת".
+
+## בדיקות
+- `https://xxx.up.railway.app/` → הדשבורד; `/health` → status up
+- POST `/test-whatsapp` → הודעת בדיקה בוואטסאפ
+- POST `/refresh` → מושך שערים ל-122 טיקרים (~2 דקות בגלל מגבלת 60 קריאות/דקה)
+- POST `/run-daily` → שולח סיכום יומי עכשיו
+
+## מה רץ אוטומטית
+- כל 5 דקות בשעות מסחר (16:30–23:05 שעון ישראל): שערים + בדיקת כללי מכירה/קנייה → WhatsApp
+- 23:15 (16:15 NY): סיכום יומי — שווי, יומי, מצטבר, עולה/יורד, מועמדים מרשימת המעקב (ירדו ≥5% או הגיעו לשער קנייה) + פסקת "הקול השפוי" מ-Claude
+
+## עד ש-CallMeBot משחרר סלוט — טלגרם (3 דקות)
+1. בטלגרם: פתח את @BotFather → `/newbot` → תן שם → קבל TOKEN.
+2. שלח הודעה כלשהי לבוט החדש שלך.
+3. פתח בדפדפן `https://api.telegram.org/bot<TOKEN>/getUpdates` → העתק את `"chat":{"id":123456789}`.
+4. Railway → Variables: `TELEGRAM_TOKEN`, `TELEGRAM_CHAT_ID` → Redeploy.
+5. POST `/test-whatsapp` → ההודעה תגיע בטלגרם. כשיהיה CallMeBot — מוסיפים את המשתנים שלו וההודעות יגיעו לשני הערוצים (או תמחק את הטלגרם).
+
+## שלב 3 — סוכן התזה
+- POST `/thesis/META` → מייצר כרטיס תזה (Claude + חיפוש) ושומר ב-portfolio.json. כדקה לכל מניה.
+- POST `/thesis-all` → מריץ על כל ההחזקות ברקע; הודעה כשסיים.
+- בדשבורד: לחיצה על טיקר → לצד הגרף: "התזה שלי" (טקסט שלך, נשמר לשרת) + כפתור "צור תזה" + הכרטיס.
+- יעד המכירה וה-stop מהכרטיס הופכים אוטומטית לכללי התראה על מניות התיק.
+- נקודה ליד הטיקר בטבלה: ירוק=הגדל, אפור=החזק, אדום=צמצם/בדוק.
