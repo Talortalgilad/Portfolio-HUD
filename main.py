@@ -5,7 +5,7 @@ Portfolio HUD backend — step 2
 - every 5 min (US market hours): checks sell_above / buy_below rules -> WhatsApp
 - after US close: daily P/L summary + watchlist opportunities (Claude) -> WhatsApp
 """
-import os, json, time, threading, urllib.parse, datetime as dt
+import os, re, json, time, threading, urllib.parse, datetime as dt
 from zoneinfo import ZoneInfo
 import requests
 from fastapi import FastAPI, HTTPException
@@ -21,6 +21,12 @@ TG_CHAT = os.environ.get("TELEGRAM_CHAT_ID", "")
 ANTHROPIC_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
 DATA = os.environ.get("DATA_PATH", "portfolio.json")
 NY = ZoneInfo("America/New_York")
+
+# first boot with a Volume: seed DATA_PATH from the portfolio.json shipped in the repo
+_REPO_JSON = os.path.join(os.path.dirname(os.path.abspath(__file__)), "portfolio.json")
+if not os.path.exists(DATA):
+    os.makedirs(os.path.dirname(os.path.abspath(DATA)) or ".", exist_ok=True)
+    import shutil; shutil.copy(_REPO_JSON, DATA); print("seeded", DATA, "from repo")
 
 app = FastAPI()
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
