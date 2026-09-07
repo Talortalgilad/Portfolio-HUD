@@ -232,6 +232,41 @@ def run_news():
             f"{'🏛' if i.get('source')=='pelosi' else '🇺🇸'} {i.get('headline','')} [{', '.join(i.get('tickers',[]))}] {i.get('impact','')}" for i in new))
     return new
 
+# ---------------- Risk agent: "the sane voice" (step 5) ----------------
+RISK_PROMPT = """אתה 'הקול השפוי' — מנהל סיכונים של תיק מניות פרטי. היום {today}. אתה לא יועץ השקעות; אתה מציג שאלות, לא הוראות.
+התיק (טיקר | נושא | משקל % | רווח/הפסד ₪ | שינוי יומי % | תזה של המשקיע | verdict מכרטיס התזה | יעד/stop):
+{rows}
+חשיפה לפי נושא: {themes}
+סיגנלים מ-7 הימים האחרונים (פלוסי/טראמפ/התראות שער): {signals}
+כתוב בעברית סקירה שבועית קצרה וישירה, עד 250 מילים, במבנה:
+1. ריכוז וקורלציה — איפה התיק חשוף לגורם אחד, ומה קורה לו בתרחיש רע.
+2. סטייה מהתזה — אילו פוזיציות התרחקו ממה שהמשקיע ציפה או חצו stop/יעד.
+3. הצעות שהייתי פוסל — מהסיגנלים של השבוע, מה נראה FOMO או "כבר במחיר".
+4. שלוש שאלות שהמשקיע צריך לענות עליהן השבוע.
+בלי הקדמות, בלי סיכום, בלי דיסקליימר."""
+
+def risk_review():
+    if not ANTHROPIC_KEY: raise RuntimeError("ANTHROPIC_API_KEY missing")
+    import anthropic
+    p = load(); weights, themes = _weights(p); fx = p["meta"]["usd_ils"]
+    rows = []
+    for h in sorted(p["holdings"], key=lambda h: -weights.get(h["ticker"], 0)):
+        q = _quotes.get(h["ticker"], {"c": h["last_price"], "dp": 0}); th = h.get("thesis") or {}
+        pl = h["qty"] * q["c"] * fx - h["qty"] * h["avg_cost_ils"]
+        rows.append(f"{h['ticker']} | {p['themes'].get(h['theme'], h['theme'])} | {weights.get(h['ticker'],0):.1f}% | {pl:+,.0f} | {q.get('dp',0):+.1f}% | "
+                    f"{h.get('user_thesis','') or '-'} | {th.get('verdict','-')} | {th.get('sell_target','-')}/{th.get('stop','-')}")
+    week_ago = (dt.datetime.now(dt.timezone.utc) - dt.timedelta(days=7)).isoformat()
+    sigs = [s["text"] for s in load_signals()["items"] if s["ts"] >= week_ago and s["kind"] != "risk"][:25]
+    prompt = RISK_PROMPT.format(today=dt.date.today().isoformat(), rows="\n".join(rows), themes=json.dumps(themes, ensure_ascii=False),
+                                signals="\n".join(sigs) or "אין")
+    msg = anthropic.Anthropic(api_key=ANTHROPIC_KEY).messages.create(model="claude-sonnet-4-6", max_tokens=1500,
+                                                                     messages=[{"role": "user", "content": prompt}])
+    text = "".join(b.text for b in msg.content if getattr(b, "type", "") == "text").strip()
+    p = load(); p["meta"]["risk_review"] = {"date": dt.date.today().isoformat(), "text": text}; store(p)
+    add_signal("risk", "🧭 סקירת סיכונים שבועית נוצרה — ראה פאנל הקול השפוי")
+    whatsapp("🧭 הקול השפוי — סקירה שבועית\n\n" + text[:3500])
+    return p["meta"]["risk_review"]
+
 def daily_summary():
     if dt.datetime.now(NY).weekday() >= 5: return
     refresh_quotes(); p = load(); rows = portfolio_summary(p)
@@ -251,6 +286,7 @@ sched = BackgroundScheduler(timezone=NY)
 sched.add_job(check_rules, "cron", day_of_week="mon-fri", hour="9-16", minute="*/5")
 sched.add_job(daily_summary, "cron", day_of_week="mon-fri", hour=16, minute=15)
 sched.add_job(run_news, "cron", hour="1,9", minute=0)          # 08:00 + 16:00 Israel time
+sched.add_job(risk_review, "cron", day_of_week="fri", hour=16, minute=40)   # weekly, after Friday close
 sched.start()
 
 @app.get("/portfolio")
@@ -290,6 +326,11 @@ def get_signals(): return load_signals()
 @app.post("/run-news")
 def run_news_now():
     try: return {"ok": True, "new": run_news()}
+    except Exception as e: raise HTTPException(500, str(e))
+
+@app.post("/risk-review")
+def risk_review_now():
+    try: return risk_review()
     except Exception as e: raise HTTPException(500, str(e))
 
 @app.get("/health")

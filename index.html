@@ -6,24 +6,25 @@
 <title>Portfolio HUD</title>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 <style>
-  :root{--void:#05080d;--panel:#0b1119;--line:#16222f;--cyan:#2ee6ff;--amber:#ffb340;--green:#3dff8a;--red:#ff4d5e;--text:#d7e3ee;--dim:#6f8397}
+  :root{--void:#05080d;--panel:#0d1520;--line:#1f2f40;--cyan:#4cf0ff;--amber:#ffc25c;--green:#4dff96;--red:#ff5c6c;--text:#eef4fa;--dim:#a3b6c9}
   *{box-sizing:border-box}
-  body{margin:0;background:var(--void);color:var(--text);font-family:"JetBrains Mono",monospace;font-size:13px;
-    background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);background-size:48px 48px}
+  body{margin:0;background:var(--void);color:var(--text);font-family:"JetBrains Mono",monospace;font-size:14px;
+    background-image:linear-gradient(rgba(31,47,64,.35) 1px,transparent 1px),linear-gradient(90deg,rgba(31,47,64,.35) 1px,transparent 1px);background-size:48px 48px}
   header{display:flex;justify-content:space-between;align-items:center;padding:18px 28px 10px;border-bottom:1px solid var(--line);flex-wrap:wrap;gap:10px}
   h1{font-family:Orbitron,sans-serif;font-weight:700;font-size:18px;letter-spacing:.18em;color:var(--cyan);margin:0}
   header small{color:var(--dim);display:block;margin-top:4px}
   main{display:grid;grid-template-columns:2fr 1fr;gap:18px;padding:18px 28px;max-width:1500px;margin:0 auto}
-  .panel{background:rgba(11,17,25,.94);border:1px solid var(--line);padding:16px 18px;position:relative}
+  .panel{background:rgba(13,21,32,.97);border:1px solid var(--line);padding:16px 18px;position:relative}
   .panel::before{content:"";position:absolute;top:-1px;right:-1px;width:18px;height:18px;border-top:2px solid var(--cyan);border-right:2px solid var(--cyan)}
   .panel h2{font-family:Orbitron,sans-serif;font-weight:500;font-size:12px;letter-spacing:.14em;color:var(--dim);margin:0 0 14px;display:flex;justify-content:space-between;align-items:center}
-  .kpis{grid-column:1/-1;display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
+  .kpis{grid-column:1/-1;display:grid;grid-template-columns:repeat(5,1fr);gap:18px}
+  .kpi .sub{direction:ltr;text-align:right;color:var(--dim);font-size:12px;margin-top:2px}
   .kpi .v{font-family:Orbitron,sans-serif;font-size:26px;font-weight:700;color:var(--cyan);direction:ltr;text-align:right}
   .kpi .l{color:var(--dim);margin-top:4px}
   .pos{color:var(--green)}.neg{color:var(--red)}
   table{width:100%;border-collapse:collapse}
   th{color:var(--dim);font-weight:400;text-align:right;padding:6px 8px;border-bottom:1px solid var(--line)}
-  td{padding:7px 8px;border-bottom:1px solid rgba(22,34,47,.6);white-space:nowrap}
+  td{padding:8px 8px;border-bottom:1px solid rgba(31,47,64,.7);white-space:nowrap}
   td.num{direction:ltr;text-align:right;font-variant-numeric:tabular-nums}
   td.tk{font-family:Orbitron,sans-serif;font-weight:500;color:var(--cyan)}
   tr:hover td{background:rgba(46,230,255,.04)}
@@ -47,6 +48,11 @@
   .wgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:8px;max-height:520px;overflow:auto}
   .wcell{display:grid;grid-template-columns:auto 1fr 1fr auto;gap:6px;align-items:center;border:1px solid var(--line);padding:6px 8px}
   .wcell b{font-family:Orbitron,sans-serif;font-weight:500;color:var(--cyan);font-size:12px;min-width:48px}
+  .chip{display:inline-block;direction:ltr;font-size:11px;padding:2px 6px;border:1px solid var(--line);color:var(--dim);white-space:nowrap;line-height:1.3}
+  .chip.pos{border-color:rgba(77,255,150,.5);color:var(--green);background:rgba(77,255,150,.08)}
+  .chip.neg{border-color:rgba(255,92,108,.5);color:var(--red);background:rgba(255,92,108,.08)}
+  .chip.flat{border-color:var(--dim)}
+  .risk{max-height:460px;overflow:auto;white-space:pre-wrap;line-height:1.6;font-size:13px}
   .wcell input{width:100%;padding:3px 6px;direction:ltr;text-align:right;font-size:12px}
   .wcell input.set{border-color:var(--amber);color:var(--amber)}
   .wcell.held{border-color:rgba(61,255,138,.4)}
@@ -69,9 +75,9 @@
   .modal .box h3{font-family:Orbitron,sans-serif;color:var(--cyan);margin:0 0 8px;display:flex;justify-content:space-between;font-size:14px}
   #tv{flex:1}
   .live{color:var(--green)}.stale{color:var(--amber)}
-  .wcell{grid-template-columns:auto auto 1fr 1fr auto}.wcell small{direction:ltr;color:var(--dim);font-size:11px;white-space:nowrap}
+  .wcell{grid-template-columns:auto auto 1fr 1fr auto}
   .tk{cursor:pointer}.tk:hover{text-decoration:underline}
-  @media(max-width:900px){main{grid-template-columns:1fr}.kpis{grid-template-columns:repeat(2,1fr)}}
+  @media(max-width:900px){main{grid-template-columns:1fr}.kpis{grid-template-columns:repeat(2,1fr)}.kpi .v{font-size:20px}}
 </style>
 </head>
 <body>
@@ -88,6 +94,7 @@
 <main>
   <section class="kpis">
     <div class="panel kpi"><div class="v" id="k-total"></div><div class="l">שווי מניות (₪)</div></div>
+    <div class="panel kpi"><div class="v" id="k-day"></div><div class="sub" id="k-day-sub"></div><div class="l">שינוי יומי (₪ / $)</div></div>
     <div class="panel kpi"><div class="v" id="k-pl"></div><div class="l">רווח/הפסד מצטבר (₪)</div></div>
     <div class="panel kpi"><div class="v" id="k-plpct"></div><div class="l">תשואה על העלות</div></div>
     <div class="panel kpi"><div class="v" id="k-cash"></div><div class="l">מזומן נטו ($)</div></div>
@@ -104,7 +111,7 @@
       <button type="submit">הוסף</button>
     </form>
     <table>
-      <thead><tr><th>טיקר</th><th>כמות</th><th>ממוצע $</th><th>אחרון $</th><th>היום</th><th>שווי ₪</th><th>רווח/הפסד ₪</th><th>%</th><th>משקל</th><th></th></tr></thead>
+      <thead><tr><th>טיקר</th><th>כמות</th><th>ממוצע $</th><th>אחרון $</th><th>היום %</th><th>היום $</th><th>שווי ₪</th><th>רווח/הפסד ₪</th><th>%</th><th>משקל</th><th></th></tr></thead>
       <tbody id="rows"></tbody>
     </table>
     <p class="note">מניה שנמכרה — לחץ × ליד השורה. עדכון כמות/ממוצע: הסר והוסף מחדש.</p>
@@ -112,6 +119,7 @@
 
   <aside class="stack">
     <section class="panel"><h2>EXPOSURE</h2><div id="themes"></div><p class="warn" id="themeWarn"></p></section>
+    <section class="panel"><h2>הקול השפוי <button onclick="runRisk()">הרץ סקירה</button></h2><div id="risk" class="risk"></div><p class="note" id="riskmsg"></p></section>
     <section class="panel"><h2>SIGNALS <button onclick="runNews()">סרוק פלוסי/טראמפ</button></h2><div id="sig" class="sigs"></div><p class="note" id="sigmsg"></p></section>
   </aside>
 
@@ -167,7 +175,10 @@ async function genThesis(t){ const m=document.getElementById("thmsg"); m.textCon
     const th=await r.json(); findItem(t).thesis=th; localStorage.setItem(KEY,JSON.stringify(S)); renderThesis(t); }
   catch(e){ m.textContent="שגיאה: "+e.message; } }
 function closeChart(){ document.getElementById("modal").classList.remove("open"); }
-const dayCell=t=>{const q=Q[t];return q?`<td class="num ${q.dp<0?"neg":"pos"}">${q.dp.toFixed(1)}%</td>`:`<td class="num" style="color:var(--dim)">—</td>`};
+const cls=v=>v>0?"pos":v<0?"neg":"flat";
+const dayCell=(t,qty)=>{const q=Q[t];if(!q)return`<td class="num" style="color:var(--dim)">—</td><td class="num" style="color:var(--dim)">—</td>`;
+  const d=(q.c-q.pc)*qty;return`<td class="num ${cls(q.dp)}">${q.dp>0?"+":""}${q.dp.toFixed(2)}%</td><td class="num ${cls(d)}">${d>0?"+":""}${f0(d)}</td>`};
+const chip=t=>{const q=Q[t];if(!q)return`<span class="chip">—</span>`;return`<span class="chip ${cls(q.dp)}">$${q.c.toFixed(2)} ${q.dp>0?"▲":q.dp<0?"▼":"●"} ${Math.abs(q.dp).toFixed(1)}%</span>`};
 const fx=()=>S.meta.usd_ils, f0=n=>n.toLocaleString("en-US",{maximumFractionDigits:0}), f2=n=>n.toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2});
 const held=t=>S.holdings.some(h=>h.ticker===t);
 
@@ -180,9 +191,12 @@ function renderHoldings(){
   const plEl=document.getElementById("k-pl"); plEl.textContent=(pl<0?"−":"+")+f0(Math.abs(pl)); plEl.className="v "+(pl<0?"neg":"pos");
   const ppEl=document.getElementById("k-plpct"); ppEl.textContent=(pl/cost*100).toFixed(1)+"%"; ppEl.className="v "+(pl<0?"neg":"pos");
   document.getElementById("k-cash").textContent=f0(cash);
+  let dayUsd=0,have=false; S.holdings.forEach(h=>{const q=Q[h.ticker];if(q){dayUsd+=(q.c-q.pc)*h.qty;have=true}});
+  const dEl=document.getElementById("k-day"); dEl.textContent=have?(dayUsd<0?"−":"+")+f0(Math.abs(dayUsd*fx())):"—"; dEl.className="v "+(dayUsd<0?"neg":"pos");
+  document.getElementById("k-day-sub").textContent=have?`${dayUsd<0?"−":"+"}$${f0(Math.abs(dayUsd))} · ${(dayUsd/ (total/fx())*100).toFixed(2)}%`:"אין שערים חיים";
   document.getElementById("rows").innerHTML=rows.map(r=>`<tr>
     <td class="tk" onclick="openChart('${r.ticker}')">${r.ticker}${r.thesis&&r.thesis.verdict?` <span style="font-size:9px;color:${r.thesis.verdict==="add"?"var(--green)":r.thesis.verdict==="hold"?"var(--dim)":"var(--red)"}">●</span>`:""}</td><td class="num">${r.qty}</td><td class="num">${f2(r.avg_cost_usd)}</td><td class="num">${f2(r.last_price)}</td>
-    ${dayCell(r.ticker)}<td class="num">${f0(r.value)}</td><td class="num ${r.pl<0?"neg":"pos"}">${r.pl<0?"−":"+"}${f0(Math.abs(r.pl))}</td>
+    ${dayCell(r.ticker,r.qty)}<td class="num">${f0(r.value)}</td><td class="num ${r.pl<0?"neg":"pos"}">${r.pl<0?"−":"+"}${f0(Math.abs(r.pl))}</td>
     <td class="num ${r.pl<0?"neg":"pos"}">${r.plp.toFixed(1)}%</td>
     <td class="num">${r.w.toFixed(1)}%<div class="wbar"><i style="width:${Math.min(r.w*4,100)}%"></i></div></td>
     <td><button class="x" title="הסר (נמכרה)" onclick="removeHolding('${r.ticker}')">×</button></td></tr>`).join("");
@@ -207,7 +221,7 @@ function renderWatch(){
   document.getElementById("wcount").textContent=`(${S.watchlist.length})`;
   document.getElementById("watch").innerHTML=list.length?list.map(w=>`<div class="wcell ${held(w.ticker)?"held":""}">
     <b class="tk" onclick="openChart('${w.ticker}')">${w.ticker}</b>
-    <small>${Q[w.ticker]?`$${Q[w.ticker].c.toFixed(2)} <span class="${Q[w.ticker].dp<0?"neg":"pos"}">${Q[w.ticker].dp.toFixed(1)}%</span>`:"—"}</small>
+    ${chip(w.ticker)}
     <input class="${w.sell_above?"set":""}" type="number" step="any" placeholder="מכירה" value="${w.sell_above??""}" onchange="setRule('${w.ticker}','sell_above',this.value)">
     <input class="${w.buy_below?"set":""}" type="number" step="any" placeholder="קנייה" value="${w.buy_below??""}" onchange="setRule('${w.ticker}','buy_below',this.value)">
     <button class="x" onclick="removeWatch('${w.ticker}')">×</button></div>`).join("")
@@ -229,7 +243,10 @@ async function renderSignals(){ const el=document.getElementById("sig"); if(!API
     :'<div class="empty">עדיין אין סיגנלים.<br>הסריקה רצה 08:00 ו-16:00, או לחץ "סרוק".</div>'; }catch(e){ el.innerHTML='<div class="empty">השרת לא זמין</div>'; } }
 async function runNews(){ const m=document.getElementById("sigmsg"); m.textContent="סורק… (כדקה)";
   try{ const r=await fetch(API+"/run-news",{method:"POST"}); const j=await r.json(); m.textContent=r.ok?`נמצאו ${j.new.length} פריטים חדשים`:"שגיאה: "+(j.detail||""); renderSignals(); }catch(e){ m.textContent="שגיאה: "+e.message } }
-function renderAll(){ renderHoldings(); renderWatch(); renderSignals(); }
+function renderRisk(){ const r=S.meta.risk_review; document.getElementById("risk").innerHTML=r?`<div style="color:var(--dim);margin-bottom:6px">${r.date}</div>${r.text.replace(/</g,"&lt;")}`:'<div class="empty">עדיין אין סקירה.<br>רצה כל יום שישי אחרי הסגירה, או לחץ "הרץ סקירה".</div>'; }
+async function runRisk(){ const m=document.getElementById("riskmsg"); if(!API){m.textContent="דורש חיבור לשרת";return} m.textContent="חושב… (כ-30 שניות)";
+  try{ const r=await fetch(API+"/risk-review",{method:"POST"}); const j=await r.json(); if(!r.ok) throw new Error(j.detail||""); S.meta.risk_review=j; localStorage.setItem(KEY,JSON.stringify(S)); m.textContent=""; renderRisk(); }catch(e){ m.textContent="שגיאה: "+e.message } }
+function renderAll(){ renderHoldings(); renderWatch(); renderSignals(); renderRisk(); }
 renderAll(); loadRemote(); if(API)setInterval(loadRemote,5*60*1000);
 </script>
 </body>
