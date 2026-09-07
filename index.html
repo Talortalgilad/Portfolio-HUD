@@ -51,6 +51,12 @@
   .wcell input.set{border-color:var(--amber);color:var(--amber)}
   .wcell.held{border-color:rgba(61,255,138,.4)}
   .note{color:var(--dim);margin:6px 0 0}
+  .sigs{max-height:420px;overflow:auto;display:flex;flex-direction:column;gap:6px}
+  .sig{border:1px solid var(--line);padding:6px 8px;font-size:12px;line-height:1.5}
+  .sig .k{font-family:Orbitron,sans-serif;font-size:9px;letter-spacing:.12em;padding:1px 6px;border:1px solid var(--dim);color:var(--dim);margin-left:6px}
+  .sig .k.pelosi{border-color:var(--cyan);color:var(--cyan)}.sig .k.trump{border-color:var(--amber);color:var(--amber)}.sig .k.alert{border-color:var(--green);color:var(--green)}
+  .sig time{color:var(--dim);font-size:10px;direction:ltr;display:inline-block}
+  .sig a{color:var(--dim)}
   .modal{position:fixed;inset:0;background:rgba(5,8,13,.85);display:none;align-items:center;justify-content:center;z-index:9}
   .modal.open{display:flex}.modal .box{width:min(1400px,96vw);height:min(720px,90vh);background:var(--panel);border:1px solid var(--cyan);padding:10px;display:grid;grid-template-rows:auto 1fr;grid-template-columns:1fr 340px;gap:10px}
   .modal .box h3{grid-column:1/-1}
@@ -106,7 +112,7 @@
 
   <aside class="stack">
     <section class="panel"><h2>EXPOSURE</h2><div id="themes"></div><p class="warn" id="themeWarn"></p></section>
-    <section class="panel"><h2>ALERTS</h2><div class="empty">אין התראות עדיין.<br>הסוכן החי (שלב 2) יכתוב לכאן ול-WhatsApp.</div></section>
+    <section class="panel"><h2>SIGNALS <button onclick="runNews()">סרוק פלוסי/טראמפ</button></h2><div id="sig" class="sigs"></div><p class="note" id="sigmsg"></p></section>
   </aside>
 
   <section class="panel full">
@@ -215,7 +221,15 @@ function removeWatch(t){ S.watchlist=S.watchlist.filter(w=>w.ticker!==t); save()
 
 function exportJSON(){ const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([JSON.stringify(S,null,2)],{type:"application/json"})); a.download="portfolio.json"; a.click(); }
 function importJSON(inp){ const r=new FileReader(); r.onload=()=>{try{S=JSON.parse(r.result);save();renderAll();}catch(e){alert("קובץ JSON לא תקין")}}; r.readAsText(inp.files[0]); inp.value=""; }
-function renderAll(){ renderHoldings(); renderWatch(); }
+async function renderSignals(){ const el=document.getElementById("sig"); if(!API){el.innerHTML='<div class="empty">דורש חיבור לשרת</div>';return}
+  try{ const s=await (await fetch(API+"/signals")).json();
+    el.innerHTML=s.items.length?s.items.slice(0,60).map(i=>`<div class="sig"><span class="k ${i.kind}">${i.kind}</span><time>${new Date(i.ts).toLocaleString("he-IL",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"})}</time>
+      ${i.impact==="+"?'<span class="pos">▲</span>':i.impact==="-"?'<span class="neg">▼</span>':""} ${i.text}
+      ${(i.tickers||[]).map(t=>`<b class="tk" style="font-size:11px" onclick="openChart('${t}')">${t}</b>`).join(" ")} ${i.url?`<a href="${i.url}" target="_blank">↗</a>`:""}</div>`).join("")
+    :'<div class="empty">עדיין אין סיגנלים.<br>הסריקה רצה 08:00 ו-16:00, או לחץ "סרוק".</div>'; }catch(e){ el.innerHTML='<div class="empty">השרת לא זמין</div>'; } }
+async function runNews(){ const m=document.getElementById("sigmsg"); m.textContent="סורק… (כדקה)";
+  try{ const r=await fetch(API+"/run-news",{method:"POST"}); const j=await r.json(); m.textContent=r.ok?`נמצאו ${j.new.length} פריטים חדשים`:"שגיאה: "+(j.detail||""); renderSignals(); }catch(e){ m.textContent="שגיאה: "+e.message } }
+function renderAll(){ renderHoldings(); renderWatch(); renderSignals(); }
 renderAll(); loadRemote(); if(API)setInterval(loadRemote,5*60*1000);
 </script>
 </body>

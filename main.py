@@ -34,6 +34,19 @@ app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], all
 _lock = threading.Lock()
 _quotes = {}                    # ticker -> {c, d, dp, pc, t}
 _alerted = {}                   # "TICKER:rule" -> date string (one alert per rule per day)
+SIGNALS = os.path.join(os.path.dirname(os.path.abspath(DATA)), "signals.json")   # alerts log + news items
+
+def load_signals():
+    try:
+        with open(SIGNALS, encoding="utf-8") as f: return json.load(f)
+    except Exception: return {"items": []}
+
+def add_signal(kind, text, tickers=(), url="", impact="?"):
+    s = load_signals()
+    s["items"].insert(0, dict(ts=dt.datetime.now(dt.timezone.utc).isoformat(timespec="minutes"), kind=kind, text=text,
+                              tickers=list(tickers), url=url, impact=impact))
+    s["items"] = s["items"][:300]
+    with open(SIGNALS, "w", encoding="utf-8") as f: json.dump(s, f, ensure_ascii=False)
 
 def load():
     with _lock, open(DATA, encoding="utf-8") as f:
@@ -85,7 +98,8 @@ def check_rules():
         key = f"{t}:{rule}"
         if cond and _alerted.get(key) != today:
             _alerted[key] = today
-            whatsapp(f"⚡ {t} {label}: ${q['c']:.2f} (כלל: {level})  יומי {q['dp']:+.1f}%")
+            msg = f"⚡ {t} {label}: ${q['c']:.2f} (כלל: {level})  יומי {q['dp']:+.1f}%"
+            add_signal("alert", msg, [t]); whatsapp(msg)
     for w in p["watchlist"]:
         q = _quotes.get(w["ticker"])
         if not q: continue
@@ -185,6 +199,39 @@ def thesis_all_bg():
         except Exception as e: print("thesis error", h["ticker"], e)
     whatsapp("🧾 כרטיסי תזה נוצרו: " + ", ".join(done))
 
+# ---------------- News agent: Pelosi + Trump (step 4) ----------------
+NEWS_PROMPT = """היום {today}. אתה סוכן חדשות למשקיע פרטי. חפש באינטרנט שני דברים:
+1. עסקאות מניות חדשות של ננסי פלוסי שדווחו (Periodic Transaction Report) ב-10 הימים האחרונים — טיקר, קנייה/מכירה, טווח סכום, תאריך העסקה ותאריך הדיווח. זכור: הדיווח מגיע בפיגור של עד 45 יום.
+2. הצהרות/פוסטים/החלטות מדיניות של דונלד טראמפ מ-48 השעות האחרונות עם השפעה על מניות: מכסים, שבבים, קריפטו, אנרגיה גרעינית, AI, סין, ריבית.
+סנן: השאר רק פריטים שנוגעים למניות או לנושאים האלה — החזקות: {holdings}; רשימת מעקב: {watch}; נושאים: {themes}.
+החזר JSON בלבד (בלי טקסט לפני/אחרי, בלי ```): רשימה של עד 10 פריטים:
+[{{"source":"pelosi"|"trump","date":"YYYY-MM-DD","headline":"משפט אחד בעברית","tickers":["..."],"impact":"+"|"-"|"?","note":"למה זה רלוונטי לתיק — משפט","url":"..."}}]
+אם אין כלום — החזר []. אל תמציא עסקאות: רק מה שמצאת במקור."""
+
+def run_news():
+    if not ANTHROPIC_KEY: return []
+    import anthropic
+    p = load(); _, themes = _weights(p)
+    prompt = NEWS_PROMPT.format(today=dt.date.today().isoformat(), holdings=",".join(h["ticker"] for h in p["holdings"]),
+                                watch=",".join(w["ticker"] for w in p["watchlist"]), themes=",".join(themes))
+    msg = anthropic.Anthropic(api_key=ANTHROPIC_KEY).messages.create(
+        model="claude-sonnet-4-6", max_tokens=2500,
+        tools=[{"type": "web_search_20250305", "name": "web_search", "max_uses": 8}],
+        messages=[{"role": "user", "content": prompt}])
+    text = "".join(b.text for b in msg.content if getattr(b, "type", "") == "text")
+    js = re.search(r"\[.*\]", text, re.S)
+    items = json.loads(js.group(0)) if js else []
+    seen = {i["text"] for i in load_signals()["items"]}
+    new = []
+    for it in items:
+        line = f"[{it.get('source','?').upper()}] {it.get('headline','')} — {it.get('note','')}"
+        if line in seen: continue
+        add_signal(it.get("source", "news"), line, it.get("tickers", []), it.get("url", ""), it.get("impact", "?")); new.append(it)
+    if new:
+        whatsapp("📰 פלוסי/טראמפ — חדש:\n" + "\n".join(
+            f"{'🏛' if i.get('source')=='pelosi' else '🇺🇸'} {i.get('headline','')} [{', '.join(i.get('tickers',[]))}] {i.get('impact','')}" for i in new))
+    return new
+
 def daily_summary():
     if dt.datetime.now(NY).weekday() >= 5: return
     refresh_quotes(); p = load(); rows = portfolio_summary(p)
@@ -203,6 +250,7 @@ def daily_summary():
 sched = BackgroundScheduler(timezone=NY)
 sched.add_job(check_rules, "cron", day_of_week="mon-fri", hour="9-16", minute="*/5")
 sched.add_job(daily_summary, "cron", day_of_week="mon-fri", hour=16, minute=15)
+sched.add_job(run_news, "cron", hour="1,9", minute=0)          # 08:00 + 16:00 Israel time
 sched.start()
 
 @app.get("/portfolio")
@@ -235,6 +283,14 @@ def thesis(ticker: str):
 def thesis_all():
     threading.Thread(target=thesis_all_bg, daemon=True).start()
     return {"ok": True, "note": "running in background, ~1-2 min per holding; notification when done"}
+
+@app.get("/signals")
+def get_signals(): return load_signals()
+
+@app.post("/run-news")
+def run_news_now():
+    try: return {"ok": True, "new": run_news()}
+    except Exception as e: raise HTTPException(500, str(e))
 
 @app.get("/health")
 def health(): return {"status": "up", "quotes": len(_quotes), "market_open": market_open()}
