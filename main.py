@@ -203,9 +203,10 @@ def thesis_all_bg():
 NEWS_PROMPT = """היום {today}. אתה סוכן חדשות למשקיע פרטי. חפש באינטרנט שני דברים:
 1. עסקאות מניות חדשות של ננסי פלוסי שדווחו (Periodic Transaction Report) ב-10 הימים האחרונים — טיקר, קנייה/מכירה, טווח סכום, תאריך העסקה ותאריך הדיווח. זכור: הדיווח מגיע בפיגור של עד 45 יום.
 2. הצהרות/פוסטים/החלטות מדיניות של דונלד טראמפ מ-48 השעות האחרונות עם השפעה על מניות: מכסים, שבבים, קריפטו, אנרגיה גרעינית, AI, סין, ריבית.
+3. לאופולד אשנברנר (Leopold Aschenbrenner) וקרן Situational Awareness LP — דיווחי 13F חדשים ב-SEC, שינויי פוזיציות שדווחו, ראיונות/מאמרים חדשים עם עמדות על מניות. זכור: 13F מתפרסם עד 45 יום אחרי סוף רבעון.
 סנן: השאר רק פריטים שנוגעים למניות או לנושאים האלה — החזקות: {holdings}; רשימת מעקב: {watch}; נושאים: {themes}.
 החזר JSON בלבד (בלי טקסט לפני/אחרי, בלי ```): רשימה של עד 10 פריטים:
-[{{"source":"pelosi"|"trump","date":"YYYY-MM-DD","headline":"משפט אחד בעברית","tickers":["..."],"impact":"+"|"-"|"?","note":"למה זה רלוונטי לתיק — משפט","url":"..."}}]
+[{{"source":"pelosi"|"trump"|"aschenbrenner","date":"YYYY-MM-DD","headline":"משפט אחד בעברית","tickers":["..."],"impact":"+"|"-"|"?","note":"למה זה רלוונטי לתיק — משפט","url":"..."}}]
 אם אין כלום — החזר []. אל תמציא עסקאות: רק מה שמצאת במקור."""
 
 def run_news():
@@ -229,7 +230,7 @@ def run_news():
         add_signal(it.get("source", "news"), line, it.get("tickers", []), it.get("url", ""), it.get("impact", "?")); new.append(it)
     if new:
         whatsapp("📰 פלוסי/טראמפ — חדש:\n" + "\n".join(
-            f"{'🏛' if i.get('source')=='pelosi' else '🇺🇸'} {i.get('headline','')} [{', '.join(i.get('tickers',[]))}] {i.get('impact','')}" for i in new))
+            f"{ {'pelosi':'🏛','trump':'🇺🇸','aschenbrenner':'🧠'}.get(i.get('source'),'📰') } {i.get('headline','')} [{', '.join(i.get('tickers',[]))}] {i.get('impact','')}" for i in new))
     return new
 
 # ---------------- Risk agent: "the sane voice" (step 5) ----------------
@@ -267,6 +268,63 @@ def risk_review():
     whatsapp("🧭 הקול השפוי — סקירה שבועית\n\n" + text[:3500])
     return p["meta"]["risk_review"]
 
+# ---------------- Chat agent: consult on the portfolio (dashboard + Telegram) ----------------
+def context_blob():
+    p = load(); weights, themes = _weights(p); fx = p["meta"]["usd_ils"]
+    L = [f"תאריך: {dt.date.today()} | USD/ILS {fx} | מזומן נטו ${p['cash']['usd'] + p['cash']['usd_liability']:,.0f}", "## החזקות (טיקר | נושא | כמות | ממוצע $ | אחרון $ | יומי % | רווח/הפסד ₪ | משקל | התזה שלי | verdict | יעד/stop)"]
+    for h in sorted(p["holdings"], key=lambda h: -weights.get(h["ticker"], 0)):
+        q = _quotes.get(h["ticker"], {"c": h["last_price"], "dp": 0}); th = h.get("thesis") or {}
+        pl = h["qty"] * q["c"] * fx - h["qty"] * h["avg_cost_ils"]
+        L.append(f"{h['ticker']} | {p['themes'].get(h['theme'], h['theme'])} | {h['qty']} | {h['avg_cost_usd']} | {q['c']:.2f} | {q.get('dp',0):+.1f}% | {pl:+,.0f} | {weights.get(h['ticker'],0):.1f}% | "
+                 f"{h.get('user_thesis','') or '-'} | {th.get('verdict','-')} | {th.get('sell_target','-')}/{th.get('stop','-')} | תזה: {th.get('thesis','-')[:200]}")
+    L.append("## חשיפה: " + json.dumps(themes, ensure_ascii=False))
+    L.append("## רשימת מעקב (טיקר אחרון יומי% | מכירה מעל / קנייה מתחת)")
+    L.append("; ".join(f"{w['ticker']} {_quotes.get(w['ticker'],{}).get('c','?')} {_quotes.get(w['ticker'],{}).get('dp',0):+.1f}% | {w.get('sell_above') or '-'}/{w.get('buy_below') or '-'}" for w in p["watchlist"]))
+    sigs = load_signals()["items"][:15]
+    L.append("## סיגנלים אחרונים:\n" + "\n".join(f"{s['ts'][:16]} [{s['kind']}] {s['text']}" for s in sigs))
+    rr = p["meta"].get("risk_review")
+    if rr: L.append(f"## סקירת הקול השפוי ({rr['date']}):\n{rr['text']}")
+    return "\n".join(L)
+
+CHAT_SYSTEM = """אתה היועץ הפנימי של תיק המניות של טל. ענה בעברית, קצר וישיר, כמו שותף להתייעצות — לא כמו דיסקליימר. אתה יודע את כל מצב התיק (למטה). אם צריך נתון חיצוני (חדשות, דוח, מחיר יעד של אנליסטים) — חפש. כשטל שואל "מה לעשות" — תן דעה מנומקת, מספרים, ומה הסיכון, ותזכיר לו שההחלטה שלו. אל תמציא נתונים שאין לך.
+
+""" + "{ctx}"
+
+def chat_reply(messages):
+    if not ANTHROPIC_KEY: return "ANTHROPIC_API_KEY חסר בשרת"
+    import anthropic
+    msg = anthropic.Anthropic(api_key=ANTHROPIC_KEY).messages.create(
+        model="claude-sonnet-4-6", max_tokens=1200, system=CHAT_SYSTEM.replace("{ctx}", context_blob()),
+        tools=[{"type": "web_search_20250305", "name": "web_search", "max_uses": 3}],
+        messages=[{"role": x["role"], "content": x["content"]} for x in messages[-12:]])
+    return "".join(b.text for b in msg.content if getattr(b, "type", "") == "text").strip() or "(אין תשובה)"
+
+def telegram_loop():
+    """Long-polls Telegram so Tal can chat with the portfolio bot from his phone. Commands: /summary /news /risk /open /thesis TICKER"""
+    offset = None; hist = []
+    while True:
+        try:
+            r = requests.get(f"https://api.telegram.org/bot{TG_TOKEN}/getUpdates", params={"timeout": 30, "offset": offset}, timeout=40).json()
+            for u in r.get("result", []):
+                offset = u["update_id"] + 1
+                msg = u.get("message") or {}; text = (msg.get("text") or "").strip()
+                if str(msg.get("chat", {}).get("id")) != str(TG_CHAT) or not text: continue
+                cmd = text.split()[0].lower()
+                if cmd == "/summary": daily_summary(); continue
+                if cmd == "/news": whatsapp("סורק…"); run_news() or whatsapp("אין פריטים חדשים"); continue
+                if cmd == "/risk": risk_review(); continue
+                if cmd == "/open": opening_brief(); continue
+                if cmd == "/thesis" and len(text.split()) > 1:
+                    th = generate_thesis(text.split()[1]); whatsapp(f"🧾 {text.split()[1].upper()}: {th.get('thesis','')}\nיעד ${th.get('sell_target')} | stop ${th.get('stop')} | {th.get('verdict')}\n{th.get('risk_note','')}"); continue
+                hist.append({"role": "user", "content": text})
+                reply = chat_reply(hist); hist.append({"role": "assistant", "content": reply}); hist = hist[-12:]
+                whatsapp(reply)
+        except Exception as e:
+            print("telegram loop error", e); time.sleep(5)
+
+if TG_TOKEN and TG_CHAT:
+    threading.Thread(target=telegram_loop, daemon=True).start()
+
 def daily_summary():
     if dt.datetime.now(NY).weekday() >= 5: return
     refresh_quotes(); p = load(); rows = portfolio_summary(p)
@@ -282,11 +340,31 @@ def daily_summary():
         if take: txt += "\n\n🧠 " + take
     whatsapp(txt)
 
+_jobs = {}   # job name -> {"last": iso, "ok": bool, "err": str}
+def logged(fn):
+    def run():
+        try: fn(); _jobs[fn.__name__] = {"last": dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds"), "ok": True, "err": ""}
+        except Exception as e: _jobs[fn.__name__] = {"last": dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds"), "ok": False, "err": str(e)}; print("job error", fn.__name__, e)
+    run.__name__ = fn.__name__; return run
+
+def opening_brief():
+    """09:35 NY: first prices of the day + what the news agent found this morning."""
+    refresh_quotes(); p = load(); rows = portfolio_summary(p)
+    movers = sorted(rows, key=lambda r: r["dp"]); day = sum(r["day"] for r in rows)
+    today = dt.date.today().isoformat()
+    news = [s for s in load_signals()["items"] if s["ts"][:10] == today and s["kind"] in ("pelosi", "trump", "aschenbrenner")]
+    txt = (f"🔔 פתיחה {dt.date.today():%d.%m} — התיק בפתיחה: ₪{day:+,.0f}\n"
+           f"⬆ {movers[-1]['t']} {movers[-1]['dp']:+.1f}% | {movers[-2]['t']} {movers[-2]['dp']:+.1f}%\n"
+           f"⬇ {movers[0]['t']} {movers[0]['dp']:+.1f}% | {movers[1]['t']} {movers[1]['dp']:+.1f}%\n"
+           f"📰 סיגנלים הבוקר: {len(news)}" + ("\n" + "\n".join("• " + n["text"][:120] for n in news[:4]) if news else ""))
+    whatsapp(txt)
+
 sched = BackgroundScheduler(timezone=NY)
-sched.add_job(check_rules, "cron", day_of_week="mon-fri", hour="9-16", minute="*/5")
-sched.add_job(daily_summary, "cron", day_of_week="mon-fri", hour=16, minute=15)
-sched.add_job(run_news, "cron", hour="1,9", minute=0)          # 08:00 + 16:00 Israel time
-sched.add_job(risk_review, "cron", day_of_week="fri", hour=16, minute=40)   # weekly, after Friday close
+sched.add_job(logged(opening_brief), "cron", day_of_week="mon-fri", hour=9, minute=36)
+sched.add_job(logged(check_rules), "cron", day_of_week="mon-fri", hour="9-16", minute="*/5")
+sched.add_job(logged(daily_summary), "cron", day_of_week="mon-fri", hour=16, minute=15)
+sched.add_job(logged(run_news), "cron", hour="1,9", minute=0)          # 08:00 + 16:00 Israel time
+sched.add_job(logged(risk_review), "cron", day_of_week="fri", hour=16, minute=40)   # weekly, after Friday close
 sched.start()
 
 @app.get("/portfolio")
@@ -333,8 +411,19 @@ def risk_review_now():
     try: return risk_review()
     except Exception as e: raise HTTPException(500, str(e))
 
+@app.post("/chat")
+def chat(body: dict):
+    try: return {"reply": chat_reply(body.get("messages", []))}
+    except Exception as e: raise HTTPException(500, str(e))
+
 @app.get("/health")
-def health(): return {"status": "up", "quotes": len(_quotes), "market_open": market_open()}
+def health():
+    return {"status": "up", "quotes": len(_quotes), "market_open": market_open(), "now_ny": dt.datetime.now(NY).isoformat(timespec="minutes"),
+            "channels": {"whatsapp": bool(CMB_KEY), "telegram": bool(TG_TOKEN and TG_CHAT)},
+            "jobs": _jobs, "next_runs": {j.name: str(j.next_run_time) for j in sched.get_jobs()}}
+
+@app.post("/run-opening")
+def run_opening(): opening_brief(); return {"ok": True}
 
 INDEX = os.path.join(os.path.dirname(os.path.abspath(__file__)), "index.html")
 

@@ -52,6 +52,11 @@
   .chip.pos{border-color:rgba(77,255,150,.5);color:var(--green);background:rgba(77,255,150,.08)}
   .chip.neg{border-color:rgba(255,92,108,.5);color:var(--red);background:rgba(255,92,108,.08)}
   .chip.flat{border-color:var(--dim)}
+  .chat{display:flex;flex-direction:column;height:420px}.chat .log{flex:1;overflow:auto;display:flex;flex-direction:column;gap:8px;padding-bottom:8px}
+  .msg{max-width:85%;padding:8px 12px;border:1px solid var(--line);white-space:pre-wrap;line-height:1.55;font-size:13px}
+  .msg.u{align-self:flex-start;border-color:rgba(76,240,255,.4);background:rgba(76,240,255,.06)}.msg.a{align-self:flex-end;background:rgba(255,255,255,.03)}
+  .chat .in{display:flex;gap:8px}.chat .in input{flex:1}
+  .sig .k.aschenbrenner{border-color:#c48cff;color:#c48cff}.sig .k.risk{border-color:var(--dim)}
   .risk{max-height:460px;overflow:auto;white-space:pre-wrap;line-height:1.6;font-size:13px}
   .wcell input{width:100%;padding:3px 6px;direction:ltr;text-align:right;font-size:12px}
   .wcell input.set{border-color:var(--amber);color:var(--amber)}
@@ -122,6 +127,12 @@
     <section class="panel"><h2>הקול השפוי <button onclick="runRisk()">הרץ סקירה</button></h2><div id="risk" class="risk"></div><p class="note" id="riskmsg"></p></section>
     <section class="panel"><h2>SIGNALS <button onclick="runNews()">סרוק פלוסי/טראמפ</button></h2><div id="sig" class="sigs"></div><p class="note" id="sigmsg"></p></section>
   </aside>
+
+  <section class="panel full">
+    <h2>CONSULT <span class="toolbar"><button class="ghost" onclick="localStorage.removeItem('hud-chat');CH=[];renderChat()">נקה</button></span></h2>
+    <div class="chat"><div class="log" id="clog"></div>
+      <div class="in"><input id="cin" placeholder="שאל על התיק… (Enter לשליחה)" onkeydown="if(event.key==='Enter')sendChat()"><button onclick="sendChat()">שלח</button></div></div>
+  </section>
 
   <section class="panel full">
     <h2><span>WATCHLIST <span id="wcount" style="color:var(--dim)"></span></span>
@@ -246,7 +257,16 @@ async function runNews(){ const m=document.getElementById("sigmsg"); m.textConte
 function renderRisk(){ const r=S.meta.risk_review; document.getElementById("risk").innerHTML=r?`<div style="color:var(--dim);margin-bottom:6px">${r.date}</div>${r.text.replace(/</g,"&lt;")}`:'<div class="empty">עדיין אין סקירה.<br>רצה כל יום שישי אחרי הסגירה, או לחץ "הרץ סקירה".</div>'; }
 async function runRisk(){ const m=document.getElementById("riskmsg"); if(!API){m.textContent="דורש חיבור לשרת";return} m.textContent="חושב… (כ-30 שניות)";
   try{ const r=await fetch(API+"/risk-review",{method:"POST"}); const j=await r.json(); if(!r.ok) throw new Error(j.detail||""); S.meta.risk_review=j; localStorage.setItem(KEY,JSON.stringify(S)); m.textContent=""; renderRisk(); }catch(e){ m.textContent="שגיאה: "+e.message } }
-function renderAll(){ renderHoldings(); renderWatch(); renderSignals(); renderRisk(); }
+let CH=JSON.parse(localStorage.getItem("hud-chat")||"[]");
+function renderChat(){ const el=document.getElementById("clog");
+  el.innerHTML=CH.length?CH.map(m=>`<div class="msg ${m.role==="user"?"u":"a"}">${m.content.replace(/</g,"&lt;")}</div>`).join(""):'<div class="empty">שאל: "מה דעתך לצמצם IBM?", "מה הכי חשוף לביטקוין?", "SMR הגיעה ל-12 — למכור?"</div>';
+  el.scrollTop=el.scrollHeight; }
+async function sendChat(){ const inp=document.getElementById("cin"); const t=inp.value.trim(); if(!t)return; if(!API){alert("דורש חיבור לשרת");return}
+  CH.push({role:"user",content:t}); inp.value=""; renderChat(); const el=document.getElementById("clog"); el.insertAdjacentHTML("beforeend",'<div class="msg a" id="typing">חושב…</div>'); el.scrollTop=el.scrollHeight;
+  try{ const r=await fetch(API+"/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({messages:CH.slice(-12)})}); const j=await r.json();
+    CH.push({role:"assistant",content:r.ok?j.reply:"שגיאה: "+(j.detail||"")}); }catch(e){ CH.push({role:"assistant",content:"שגיאה: "+e.message}) }
+  CH=CH.slice(-30); localStorage.setItem("hud-chat",JSON.stringify(CH)); renderChat(); }
+function renderAll(){ renderHoldings(); renderWatch(); renderSignals(); renderRisk(); renderChat(); }
 renderAll(); loadRemote(); if(API)setInterval(loadRemote,5*60*1000);
 </script>
 </body>
