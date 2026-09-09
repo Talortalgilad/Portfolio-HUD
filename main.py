@@ -76,8 +76,35 @@ def fetch_quote(t):
     q = r.json()
     if q.get("c"): _quotes[t] = q
 
+# market overview: (label, finnhub symbol or None for fx, TradingView symbol)
+MARKETS = [("S&P 500", "SPY", "SP:SPX"), ("Nasdaq 100", "QQQ", "NASDAQ:NDX"), ("Dow", "DIA", "DJ:DJI"), ("Russell 2000", "IWM", "CBOE:RUT"),
+           ("VIX", "VIXY", "CBOE:VIX"), ("USD/ILS", None, "FX_IDC:USDILS"), ("Bitcoin", "BINANCE:BTCUSDT", "BITSTAMP:BTCUSD"), ("Ethereum", "BINANCE:ETHUSDT", "BITSTAMP:ETHUSD"),
+           ("Solana", "BINANCE:SOLUSDT", "BINANCE:SOLUSDT"), ("XRP", "BINANCE:XRPUSDT", "BITSTAMP:XRPUSD"), ("זהב", "GLD", "TVC:GOLD"), ("נפט", "USO", "TVC:USOIL")]
+_markets = {}
+
+def refresh_markets(fx):
+    for label, sym, tv in MARKETS:
+        try:
+            if sym is None: q = {"c": fx, "dp": 0, "pc": fx}
+            else: q = requests.get("https://finnhub.io/api/v1/quote", params={"symbol": sym, "token": FINNHUB}, timeout=10).json(); time.sleep(1.05)
+            if q.get("c"): _markets[label] = {"c": q["c"], "dp": q.get("dp") or 0, "tv": tv, "proxy": sym if sym and ":" not in sym else ""}
+        except Exception as e: print("market error", label, e)
+
+def fetch_fx():
+    """USD/ILS — free, no key. Broker values the portfolio at the live rate, so we must too."""
+    for url, path in (("https://open.er-api.com/v6/latest/USD", ("rates", "ILS")), ("https://api.frankfurter.app/latest?from=USD&to=ILS", ("rates", "ILS"))):
+        try:
+            j = requests.get(url, timeout=10).json(); v = j
+            for k in path: v = v[k]
+            if v and 2 < float(v) < 6: return round(float(v), 4)
+        except Exception as e: print("fx error", url, e)
+    return None
+
 def refresh_quotes():
     p = load()
+    fx = fetch_fx()
+    if fx: p["meta"]["usd_ils"] = fx
+    refresh_markets(fx or p["meta"]["usd_ils"])
     for t in all_tickers(p):
         try: fetch_quote(t); time.sleep(1.05)   # free tier: 60 calls/min
         except Exception as e: print("quote error", t, e)
@@ -360,11 +387,11 @@ def opening_brief():
     whatsapp(txt)
 
 sched = BackgroundScheduler(timezone=NY)
-sched.add_job(logged(opening_brief), "cron", day_of_week="mon-fri", hour=9, minute=36)
-sched.add_job(logged(check_rules), "cron", day_of_week="mon-fri", hour="9-16", minute="*/5")
-sched.add_job(logged(daily_summary), "cron", day_of_week="mon-fri", hour=16, minute=15)
-sched.add_job(logged(run_news), "cron", hour="1,9", minute=0)          # 08:00 + 16:00 Israel time
-sched.add_job(logged(risk_review), "cron", day_of_week="fri", hour=16, minute=40)   # weekly, after Friday close
+sched.add_job(logged(opening_brief), "cron", id="opening_brief", name="opening_brief", day_of_week="mon-fri", hour=9, minute=36)
+sched.add_job(logged(check_rules), "cron", id="check_rules", name="check_rules", day_of_week="mon-fri", hour="9-16", minute="*/5")
+sched.add_job(logged(daily_summary), "cron", id="daily_summary", name="daily_summary", day_of_week="mon-fri", hour=16, minute=15)
+sched.add_job(logged(run_news), "cron", id="run_news", name="run_news", hour="1,9", minute=0)          # 08:00 + 16:00 Israel time
+sched.add_job(logged(risk_review), "cron", id="risk_review", name="risk_review", day_of_week="fri", hour=16, minute=40)   # weekly, after Friday close
 sched.start()
 
 @app.get("/portfolio")
@@ -374,6 +401,9 @@ def get_portfolio(): return load()
 def put_portfolio(p: dict):
     if "holdings" not in p or "watchlist" not in p: raise HTTPException(400, "bad shape")
     store(p); return {"ok": True}
+
+@app.get("/markets")
+def get_markets(): return _markets
 
 @app.get("/quotes")
 def get_quotes(): return _quotes
