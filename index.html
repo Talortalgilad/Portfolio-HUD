@@ -106,7 +106,7 @@
     <div class="panel kpi"><div class="v" id="k-day"></div><div class="sub" id="k-day-sub"></div><div class="l">שינוי יומי (₪ / $)</div></div>
     <div class="panel kpi"><div class="v" id="k-pl"></div><div class="l">רווח/הפסד מצטבר (₪)</div></div>
     <div class="panel kpi"><div class="v" id="k-plpct"></div><div class="l">תשואה על העלות</div></div>
-    <div class="panel kpi"><div class="v" id="k-cash"></div><div class="l">מזומן נטו ($)</div></div>
+    <div class="panel kpi"><div class="v" id="k-cash"></div><div class="sub" id="k-cash-sub"></div><div class="l">מזומן נטו ($)</div></div>
   </section>
 
   <section class="panel">
@@ -123,7 +123,7 @@
       <thead><tr><th>טיקר</th><th>כמות</th><th>ממוצע $</th><th>אחרון $</th><th>היום %</th><th>היום $</th><th>שווי ₪</th><th>רווח/הפסד ₪</th><th>%</th><th>משקל</th><th></th></tr></thead>
       <tbody id="rows"></tbody>
     </table>
-    <p class="note">מניה שנמכרה — לחץ × ליד השורה. עדכון כמות/ממוצע: הסר והוסף מחדש.</p>
+    <p class="note">מכירה (מלאה או חלקית) — × ליד השורה: שואל שער וכמות, מוסיף את התמורה למזומן ורושם רווח ממומש. קנייה נוספת של מניה קיימת — "+ הוסף מניה" עם אותו טיקר: הממוצע מתעדכן והעלות יורדת מהמזומן.</p>
   </section>
 
   <aside class="stack">
@@ -207,6 +207,8 @@ function renderHoldings(){
   const plEl=document.getElementById("k-pl"); plEl.textContent=(pl<0?"−":"+")+f0(Math.abs(pl)); plEl.className="v "+(pl<0?"neg":"pos");
   const ppEl=document.getElementById("k-plpct"); ppEl.textContent=(pl/cost*100).toFixed(1)+"%"; ppEl.className="v "+(pl<0?"neg":"pos");
   document.getElementById("k-cash").textContent=f0(cash);
+  const realized=(S.trades||[]).filter(x=>x.side==="sell").reduce((s,x)=>s+(x.pl_usd||0),0), nsell=(S.trades||[]).filter(x=>x.side==="sell").length;
+  document.getElementById("k-cash-sub").textContent=nsell?`ממומש: ${realized<0?"−":"+"}$${f0(Math.abs(realized))} (${nsell} מכירות)`:"";
   let dayUsd=0,have=false; S.holdings.forEach(h=>{const q=Q[h.ticker];if(q){dayUsd+=(q.c-q.pc)*h.qty;have=true}});
   const dEl=document.getElementById("k-day"); dEl.textContent=have?(dayUsd<0?"−":"+")+f0(Math.abs(dayUsd*fx())):"—"; dEl.className="v "+(dayUsd<0?"neg":"pos");
   document.getElementById("k-day-sub").textContent=have?`${dayUsd<0?"−":"+"}$${f0(Math.abs(dayUsd))} · ${(dayUsd/ (total/fx())*100).toFixed(2)}%`:"אין שערים חיים";
@@ -223,13 +225,28 @@ function renderHoldings(){
   document.getElementById("themeWarn").textContent=hot.length?`ריכוז מעל 20%: ${hot.join(", ")}`:"";
   document.getElementById("themeSel").innerHTML=Object.entries(S.themes).map(([k,v])=>`<option value="${k}">${v}</option>`).join("");
 }
+function logTrade(tr){ (S.trades=S.trades||[]).unshift({date:new Date().toISOString().slice(0,10),...tr}); }
 function addHolding(e){
   e.preventDefault(); const f=new FormData(e.target); const t=f.get("ticker").trim().toUpperCase();
-  if(held(t)){alert(t+" כבר בתיק — הסר קודם");return}
-  S.holdings.push({ticker:t,name:t,qty:+f.get("qty"),avg_cost_usd:+f.get("avg"),avg_cost_ils:+f.get("avg")*fx(),last_price:+f.get("price"),theme:f.get("theme"),thesis:""});
+  const qty=+f.get("qty"), price=+f.get("avg"), last=+f.get("price"); const cost=qty*price;
+  if(!confirm(`קנייה: ${qty} ${t} @ $${price} = $${f0(cost)}\nלהוריד $${f0(cost)} מהמזומן?`)) return;
+  const ex=S.holdings.find(h=>h.ticker===t);
+  if(ex){ const nq=ex.qty+qty; ex.avg_cost_ils=(ex.qty*ex.avg_cost_ils+qty*price*fx())/nq; ex.avg_cost_usd=(ex.qty*ex.avg_cost_usd+qty*price)/nq; ex.qty=nq; ex.last_price=last; }
+  else S.holdings.push({ticker:t,name:t,qty,avg_cost_usd:price,avg_cost_ils:price*fx(),last_price:last,theme:f.get("theme"),thesis:null,user_thesis:""});
+  S.cash.usd-=cost; logTrade({ticker:t,side:"buy",qty,price,usd:-cost});
   e.target.reset(); e.target.classList.add("hidden"); save(); renderAll();
 }
-function removeHolding(t){ if(!confirm(`להסיר את ${t} מהתיק?`))return; S.holdings=S.holdings.filter(h=>h.ticker!==t); save(); renderAll(); }
+function removeHolding(t){
+  const h=S.holdings.find(x=>x.ticker===t); if(!h)return;
+  const last=Q[t]?Q[t].c:h.last_price;
+  const ps=prompt(`מכירת ${t}\nבאיזה שער נמכרה? ($)`, last.toFixed(2)); if(ps===null)return; const price=+ps; if(!(price>0)){alert("שער לא תקין");return}
+  const qs=prompt(`כמה מניות נמכרו? (יש ${h.qty})`, h.qty); if(qs===null)return; const qty=+qs; if(!(qty>0)||qty>h.qty+1e-9){alert("כמות לא תקינה");return}
+  const proceeds=qty*price, pl=qty*(price-h.avg_cost_usd);
+  if(!confirm(`${qty} ${t} @ $${price} = $${f0(proceeds)}\nרווח/הפסד ממומש: $${pl<0?"−":"+"}${f0(Math.abs(pl))}\nלהוסיף $${f0(proceeds)} למזומן?`)) return;
+  S.cash.usd+=proceeds; logTrade({ticker:t,side:"sell",qty,price,usd:proceeds,pl_usd:pl});
+  if(qty>=h.qty-1e-9) S.holdings=S.holdings.filter(x=>x.ticker!==t); else h.qty-=qty;
+  save(); renderAll();
+}
 
 function renderWatch(){
   const q=(document.getElementById("wfilter").value||"").toUpperCase();
