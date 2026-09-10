@@ -446,6 +446,11 @@ def chat(body: dict):
     try: return {"reply": chat_reply(body.get("messages", []))}
     except Exception as e: raise HTTPException(500, str(e))
 
+@app.get("/version")
+def version():
+    idx = open(INDEX, encoding="utf-8").read() if os.path.exists(INDEX) else ""
+    return {"index_has_sell_flow": "logTrade" in idx, "index_has_markets": "renderMarkets" in idx, "markets_loaded": len(_markets), "quotes": len(_quotes)}
+
 @app.get("/health")
 def health():
     return {"status": "up", "quotes": len(_quotes), "market_open": market_open(), "now_ny": dt.datetime.now(NY).isoformat(timespec="minutes"),
@@ -459,5 +464,5 @@ INDEX = os.path.join(os.path.dirname(os.path.abspath(__file__)), "index.html")
 
 @app.get("/")
 def root():
-    if os.path.exists(INDEX): return FileResponse(INDEX)
+    if os.path.exists(INDEX): return FileResponse(INDEX, headers={"Cache-Control": "no-cache, no-store, must-revalidate"})
     return {"status": "up", "hint": "index.html missing next to main.py"}
